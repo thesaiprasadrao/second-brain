@@ -1,0 +1,18 @@
+# Baileys session
+auth/
+
+# Database
+memory.db
+
+# Environment
+.env
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Claude Code internals
+.agents/
+skills-lock.json
