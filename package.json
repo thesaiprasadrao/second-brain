@@ -9,7 +9,10 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "setup": "node src/setup.js"
+    "setup": "node src/setup.js",
+    "daemon": "pm2 start src/index.js --name second-brain --node-args='--experimental-vm-modules'",
+    "stop": "pm2 stop second-brain",
+    "logs": "tail -f second-brain.log"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.1",

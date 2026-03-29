@@ -14,7 +14,7 @@ node_modules/
 
 # Logs
 *.log
-
 # Claude Code internals
 .agents/
 skills-lock.json
+
