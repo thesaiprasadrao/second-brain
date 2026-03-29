@@ -5,6 +5,7 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import { saveMessage } from './db.js';
 import { pipeline } from './pipeline.js';
+import { startCron } from './cron.js';
 
 const logger = pino({ level: 'silent' });
 
@@ -30,6 +31,7 @@ async function connect() {
 
     if (connection === 'open') {
       console.log('WhatsApp connected.');
+      startCron(sock);
     }
   });
 
