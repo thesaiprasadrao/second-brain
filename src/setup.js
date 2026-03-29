@@ -2,6 +2,7 @@ import 'dotenv/config';
 import * as p from '@clack/prompts';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { createServer } from 'http';
+import { spawn } from 'child_process';
 import { google } from 'googleapis';
 import open from 'open';
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
@@ -154,5 +155,13 @@ export async function setup() {
     SELF_CHAT_JID: jid,
   });
 
-  p.outro('All done. Run `npm start` and text yourself to begin.');
+  p.outro('All done. Starting Second Brain in the background…');
+
+  // Launch as background process — survives terminal close
+  const child = spawn(process.execPath, ['src/index.js'], {
+    detached: true,
+    stdio: 'ignore',
+    env: { ...process.env },
+  });
+  child.unref();
 }
