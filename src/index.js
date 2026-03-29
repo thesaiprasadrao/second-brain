@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
@@ -11,8 +11,9 @@ const logger = pino({ level: 'silent' });
 
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
+  const { version } = await fetchLatestBaileysVersion();
 
-  const sock = makeWASocket({ auth: state, logger });
+  const sock = makeWASocket({ auth: state, logger, version });
 
   sock.ev.on('creds.update', saveCreds);
 
@@ -73,8 +74,13 @@ async function connect() {
       }
     }
   });
-
   return sock;
 }
 
-connect();
+connect().catch((err) => {
+  console.error('Fatal:', err);
+  process.exit(1);
+});
+
+// Keep process alive
+process.stdin.resume();

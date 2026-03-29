@@ -4,7 +4,7 @@ import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { createServer } from 'http';
 import { google } from 'googleapis';
 import open from 'open';
-import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
@@ -38,7 +38,8 @@ async function connectWhatsApp() {
   s.start('Waiting for QR scan…');
 
   const { state, saveCreds } = await useMultiFileAuthState('auth');
-  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }) });
+  const { version } = await fetchLatestBaileysVersion();
+  const sock = makeWASocket({ auth: state, logger: pino({ level: 'silent' }), version });
   sock.ev.on('creds.update', saveCreds);
 
   return new Promise((resolve, reject) => {
