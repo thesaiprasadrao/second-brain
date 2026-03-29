@@ -3,6 +3,8 @@ auth/
 
 # Database
 memory.db
+memory.db-shm
+memory.db-wal
 
 # Environment
 .env
