@@ -9,6 +9,11 @@ import { startCron } from './cron.js';
 
 const logger = pino({ level: 'silent' });
 
+const log = {
+  info: (msg) => console.log(`[${new Date().toISOString()}] INFO  ${msg}`),
+  error: (msg) => console.error(`[${new Date().toISOString()}] ERROR ${msg}`),
+};
+
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
   const { version } = await fetchLatestBaileysVersion();
@@ -20,18 +25,19 @@ async function connect() {
   sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
     if (qr) {
       qrcode.generate(qr, { small: true });
-      console.log('Scan the QR code above with WhatsApp.');
+      log.info('Scan the QR code above with WhatsApp.');
     }
 
     if (connection === 'close') {
       const shouldReconnect =
         new Boom(lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+      log.info(`Connection closed. Reconnecting: ${shouldReconnect}`);
       if (shouldReconnect) connect();
-      else console.log('Logged out. Delete auth/ and restart.');
+      else log.error('Logged out. Delete auth/ and restart.');
     }
 
     if (connection === 'open') {
-      console.log('WhatsApp connected.');
+      log.info('WhatsApp connected.');
       startCron(sock);
     }
   });
@@ -61,15 +67,17 @@ async function connect() {
       if (!text && !mediaType) continue;
 
       saveMessage('user', text ?? `[${mediaType}]`);
+      log.info(`MSG  in: ${text ?? `[${mediaType}]`}`);
 
       try {
         const reply = await pipeline(msg, sock);
         if (reply) {
           await sock.sendMessage(jid, { text: reply });
           saveMessage('assistant', reply);
+          log.info(`MSG out: ${reply}`);
         }
       } catch (err) {
-        console.error('Pipeline error:', err);
+        log.error(`Pipeline: ${err.message}`);
         await sock.sendMessage(jid, { text: 'Something went wrong. Try again.' });
       }
     }
@@ -78,7 +86,7 @@ async function connect() {
 }
 
 connect().catch((err) => {
-  console.error('Fatal:', err);
+  log.error(`Fatal: ${err.message}`);
   process.exit(1);
 });
 
