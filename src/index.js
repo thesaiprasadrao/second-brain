@@ -9,12 +9,13 @@ import { startCron } from './cron.js';
 
 const logger = pino({ level: 'fatal' });
 
-// Suppress libsignal noise that prints directly to stdout
-const _write = process.stdout.write.bind(process.stdout);
-process.stdout.write = (chunk, ...args) => {
-  if (typeof chunk === 'string' && (chunk.includes('Bad MAC') || chunk.includes('Failed to decrypt') || chunk.includes('Closing open session') || chunk.includes('Closing session:'))) return true;
-  return _write(chunk, ...args);
-};
+// Suppress libsignal noise that prints directly to stdout/stderr
+const NOISE = ['Bad MAC', 'Failed to decrypt', 'Closing open session', 'Closing session:'];
+const _stdoutWrite = process.stdout.write.bind(process.stdout);
+const _stderrWrite = process.stderr.write.bind(process.stderr);
+const isNoise = (chunk) => typeof chunk === 'string' && NOISE.some((n) => chunk.includes(n));
+process.stdout.write = (chunk, ...args) => isNoise(chunk) ? true : _stdoutWrite(chunk, ...args);
+process.stderr.write = (chunk, ...args) => isNoise(chunk) ? true : _stderrWrite(chunk, ...args);
 
 const log = {
   info: (msg) => console.log(`[${new Date().toISOString()}] INFO  ${msg}`),
