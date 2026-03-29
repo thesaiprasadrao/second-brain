@@ -7,7 +7,14 @@ import { saveMessage } from './db.js';
 import { pipeline } from './pipeline.js';
 import { startCron } from './cron.js';
 
-const logger = pino({ level: 'silent' });
+const logger = pino({ level: 'fatal' });
+
+// Suppress libsignal noise that prints directly to stdout
+const _write = process.stdout.write.bind(process.stdout);
+process.stdout.write = (chunk, ...args) => {
+  if (typeof chunk === 'string' && (chunk.includes('Bad MAC') || chunk.includes('Failed to decrypt') || chunk.includes('Closing open session') || chunk.includes('Closing session:'))) return true;
+  return _write(chunk, ...args);
+};
 
 const log = {
   info: (msg) => console.log(`[${new Date().toISOString()}] INFO  ${msg}`),
