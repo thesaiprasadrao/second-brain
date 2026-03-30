@@ -22,6 +22,7 @@ process.stderr.write = (chunk, ...args) => isNoise(chunk) ? true : _stderrWrite(
 let tuiStarted = false;
 let cronStarted = false;
 let reconnectTimer = null;
+let reconnectAttempts = 0;
 
 function startTUI(sock, selfJid) {
   if (tuiStarted) return;
@@ -43,7 +44,17 @@ function startTUI(sock, selfJid) {
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState('auth');
   const { version } = await fetchLatestBaileysVersion();
-  const sock = makeWASocket({ auth: state, logger, version });
+  
+  const sock = makeWASocket({ 
+    auth: state, 
+    logger, 
+    version,
+    // Add connection stability options
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 60000,
+    keepAliveIntervalMs: 30000,
+    markOnlineOnConnect: false
+  });
 
   sock.ev.on('creds.update', saveCreds);
 
@@ -63,16 +74,20 @@ async function connect() {
         process.exit(1);
       }
 
-      // Debounce reconnects — prevents storm when multiple close events fire at once
+      // Add exponential backoff for reconnection stability
       if (reconnectTimer) return;
+      const backoffDelay = Math.min(2000 * Math.pow(2, reconnectAttempts), 30000);
+      reconnectAttempts++;
+      
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
         connect();
-      }, 2000);
+      }, backoffDelay);
     }
 
     if (connection === 'open') {
       log.info('WhatsApp connected.');
+      reconnectAttempts = 0; // Reset on successful connection
       if (!cronStarted) { startCron(sock); cronStarted = true; }
       const selfJid = sock.user?.id?.replace(/:.*@/, '@');
       startTUI(sock, selfJid);
