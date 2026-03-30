@@ -19,14 +19,20 @@ const isNoise = (chunk) => typeof chunk === 'string' && NOISE.some((n) => chunk.
 process.stdout.write = (chunk, ...args) => isNoise(chunk) ? true : _stdoutWrite(chunk, ...args);
 process.stderr.write = (chunk, ...args) => isNoise(chunk) ? true : _stderrWrite(chunk, ...args);
 
+let tuiStarted = false;
+let cronStarted = false;
+let reconnectTimer = null;
+
 function startTUI(sock, selfJid) {
+  if (tuiStarted) return;
+  tuiStarted = true;
+
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   console.log('\nSecond Brain is running. Type a message and press Enter (Ctrl+C to exit).\n');
 
   const prompt = () => rl.question('> ', async (input) => {
     const text = input.trim();
     if (!text) return prompt();
-
     await sock.sendMessage(selfJid, { text });
     prompt();
   });
@@ -48,16 +54,26 @@ async function connect() {
     }
 
     if (connection === 'close') {
-      const shouldReconnect =
-        new Boom(lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-      log.info(`Connection closed. Reconnecting: ${shouldReconnect}`);
-      if (shouldReconnect) connect();
-      else { log.error('Logged out. Delete auth/ and restart.'); process.exit(1); }
+      const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
+      const shouldReconnect = code !== DisconnectReason.loggedOut;
+      log.info(`Connection closed (${code}). Reconnecting: ${shouldReconnect}`);
+
+      if (!shouldReconnect) {
+        log.error('Logged out. Delete auth/ and restart.');
+        process.exit(1);
+      }
+
+      // Debounce reconnects — prevents storm when multiple close events fire at once
+      if (reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connect();
+      }, 2000);
     }
 
     if (connection === 'open') {
       log.info('WhatsApp connected.');
-      startCron(sock);
+      if (!cronStarted) { startCron(sock); cronStarted = true; }
       const selfJid = sock.user?.id?.replace(/:.*@/, '@');
       startTUI(sock, selfJid);
     }
