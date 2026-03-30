@@ -106,7 +106,7 @@ async function connect() {
       log.info(`MSG  in: ${text ?? `[${mediaType}]`}`);
 
       try {
-        const reply = await pipeline(msg, sock);
+        const reply = await pipeline(msg);
         if (reply) {
           await sock.sendMessage(jid, { text: reply });
           saveMessage('assistant', reply);
