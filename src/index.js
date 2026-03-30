@@ -136,14 +136,23 @@ async function connect() {
       try {
         const reply = await pipeline(msg);
         if (reply) {
-          await sock.sendMessage(jid, { text: reply });
-          saveMessage('assistant', reply);
-          log.info(`MSG out: ${reply}`);
-          console.log(`\n← ${reply}\n> `);
+          try {
+            await sock.sendMessage(jid, { text: reply });
+            saveMessage('assistant', reply);
+            log.info(`MSG out: ${reply}`);
+            console.log(`\n← ${reply}\n> `);
+          } catch (sendErr) {
+            log.error(`Send failed: ${sendErr.message}`);
+            console.log(`\nFailed to send: ${reply}\nError: ${sendErr.message}\n> `);
+          }
         }
       } catch (err) {
         log.error(`Pipeline: ${err.message}`);
-        await sock.sendMessage(jid, { text: 'Something went wrong. Try again.' });
+        try {
+          await sock.sendMessage(jid, { text: 'Something went wrong. Try again.' });
+        } catch (sendErr) {
+          log.error(`Error message send failed: ${sendErr.message}`);
+        }
       }
     }
   });
