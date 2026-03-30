@@ -83,10 +83,16 @@ async function connect() {
     if (type !== 'notify') return;
 
     for (const msg of messages) {
+      // Debug logging
+      log.info(`Message received - fromMe: ${msg.key.fromMe}, jid: ${msg.key.remoteJid}, type: ${type}`);
+      
       if (!msg.key.fromMe) continue;
       const jid = msg.key.remoteJid;
-      if (!jid?.endsWith('@s.whatsapp.net')) continue;
       const selfJid = sock.user?.id?.replace(/:.*@/, '@');
+      
+      log.info(`JID check - jid: ${jid}, selfJid: ${selfJid}, match: ${jid === selfJid}`);
+      
+      if (!jid?.endsWith('@s.whatsapp.net')) continue;
       if (jid !== selfJid) continue;
 
       const text =
