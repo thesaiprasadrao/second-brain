@@ -92,8 +92,15 @@ async function connect() {
       
       log.info(`JID check - jid: ${jid}, selfJid: ${selfJid}, match: ${jid === selfJid}`);
       
-      if (!jid?.endsWith('@s.whatsapp.net')) continue;
-      if (jid !== selfJid) continue;
+      // Handle both @s.whatsapp.net and @lid formats for self-messages
+      const isDirectChat = jid?.endsWith('@s.whatsapp.net');
+      const isSelfLinkedDevice = jid?.endsWith('@lid');
+      
+      if (!isDirectChat && !isSelfLinkedDevice) continue;
+      
+      // For linked device messages (@lid), they're automatically self-messages when fromMe=true
+      // For direct chats (@s.whatsapp.net), check if it matches our JID
+      if (isDirectChat && jid !== selfJid) continue;
 
       const text =
         msg.message?.conversation ||
