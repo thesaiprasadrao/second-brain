@@ -9,9 +9,22 @@ import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 import { Boom } from '@hapi/boom';
 import qrcode from 'qrcode-terminal';
 import pino from 'pino';
-import { Client } from '@notionhq/client';
 
 const ENV_PATH = '.env';
+
+const GOOGLE_SCOPES = {
+  keep: [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/tasks',
+    'https://www.googleapis.com/auth/keep',
+  ],
+  docs: [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/tasks',
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/drive.file',
+  ],
+};
 
 function readEnv() {
   if (!existsSync(ENV_PATH)) return {};
@@ -28,9 +41,7 @@ function writeEnv(vars) {
   const merged = { ...existing, ...vars };
   writeFileSync(
     ENV_PATH,
-    Object.entries(merged)
-      .map(([k, v]) => `${k}=${v}`)
-      .join('\n') + '\n'
+    Object.entries(merged).map(([k, v]) => `${k}=${v}`).join('\n') + '\n'
   );
 }
 
@@ -65,9 +76,10 @@ async function connectWhatsApp() {
   });
 }
 
-async function googleOAuth(clientId, clientSecret) {
+async function googleOAuth(clientId, clientSecret, backend) {
+  const scopes = GOOGLE_SCOPES[backend];
   const oauth2 = new google.auth.OAuth2(clientId, clientSecret, 'http://localhost:4242/callback');
-  const authUrl = oauth2.generateAuthUrl({ access_type: 'offline', scope: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/tasks'] });
+  const authUrl = oauth2.generateAuthUrl({ access_type: 'offline', scope: scopes });
 
   p.log.info('Opening browser for Google OAuth…');
   await open(authUrl);
@@ -87,67 +99,34 @@ async function googleOAuth(clientId, clientSecret) {
   return tokens.refresh_token;
 }
 
-async function seedNotionDbs(notionKey) {
-  const notion = new Client({ auth: notionKey });
-  const s = p.spinner();
-  s.start('Setting up Notion workspace…');
-
-  const root = await notion.search({ filter: { value: 'page', property: 'object' }, page_size: 1 });
-  const parentId = root.results[0]?.id;
-  if (!parentId) throw new Error('No Notion page found. Share at least one page with your integration.');
-
-  const seeds = [
-    { name: '📥 Inbox', desc: 'Unclassified captures and brain dumps' },
-    { name: '💡 Ideas', desc: 'Ideas, startup thoughts, tools to try' },
-    { name: '📓 Journal', desc: 'Reflections, thoughts, end-of-day notes' },
-  ];
-
-  const ids = {};
-  for (const seed of seeds) {
-    const db = await notion.databases.create({
-      parent: { page_id: parentId },
-      title: [{ text: { content: seed.name } }],
-      properties: { Name: { title: {} }, Tags: { multi_select: {} } },
-    });
-    ids[seed.name] = db.id;
-  }
-
-  s.stop('Notion workspace ready.');
-  return ids;
-}
-
 export async function setup() {
   p.intro('Welcome to Second Brain');
 
-  // WhatsApp
   const { jid } = await connectWhatsApp();
 
-  // API keys
   const groqKey = await p.password({ message: 'Groq API key' });
   if (p.isCancel(groqKey)) process.exit(0);
 
-  const notionKey = await p.password({ message: 'Notion API key' });
-  if (p.isCancel(notionKey)) process.exit(0);
+  const backend = await p.select({
+    message: 'Where should notes be saved?',
+    options: [
+      { value: 'keep', label: 'Google Keep', hint: 'one note per entry' },
+      { value: 'docs', label: 'Google Docs', hint: 'one doc per category, entries appended' },
+    ],
+  });
+  if (p.isCancel(backend)) process.exit(0);
 
-  // Google OAuth
   const googleClientId = await p.text({ message: 'Google OAuth Client ID' });
   if (p.isCancel(googleClientId)) process.exit(0);
 
   const googleClientSecret = await p.password({ message: 'Google OAuth Client Secret' });
   if (p.isCancel(googleClientSecret)) process.exit(0);
 
-  const refreshToken = await googleOAuth(googleClientId, googleClientSecret);
+  const refreshToken = await googleOAuth(googleClientId, googleClientSecret, backend);
 
-  // Seed Notion
-  const dbIds = await seedNotionDbs(notionKey);
-
-  // Write .env
   writeEnv({
     GROQ_API_KEY: groqKey,
-    NOTION_API_KEY: notionKey,
-    NOTION_INBOX_DB_ID: dbIds['📥 Inbox'],
-    NOTION_IDEAS_DB_ID: dbIds['💡 Ideas'],
-    NOTION_JOURNAL_DB_ID: dbIds['📓 Journal'],
+    STORAGE_BACKEND: backend,
     GOOGLE_CLIENT_ID: googleClientId,
     GOOGLE_CLIENT_SECRET: googleClientSecret,
     GOOGLE_REFRESH_TOKEN: refreshToken,
@@ -157,7 +136,6 @@ export async function setup() {
 
   p.outro('All done. Starting Second Brain in the background…');
 
-  // Launch as background process — survives terminal close
   const child = spawn(process.execPath, ['src/index.js'], {
     detached: true,
     stdio: 'ignore',
