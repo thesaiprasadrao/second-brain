@@ -13,32 +13,26 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS notes (
+  CREATE TABLE IF NOT EXISTS pending_captures (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    text       TEXT    NOT NULL,
-    embedding  BLOB    NOT NULL,
-    notion_url TEXT,
-    tags       TEXT,
+    title      TEXT NOT NULL,
+    body       TEXT,
+    options    TEXT NOT NULL,
+    step       TEXT NOT NULL DEFAULT 'awaiting_category',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS notion_dbs (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    notion_id   TEXT NOT NULL UNIQUE,
-    name        TEXT NOT NULL,
-    description TEXT NOT NULL
+  CREATE TABLE IF NOT EXISTS docs_registry (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL UNIQUE,
+    doc_id   TEXT NOT NULL
   );
 `);
 
 // --- messages ---
 
-const insertMessage = db.prepare(
-  'INSERT INTO messages (role, content) VALUES (?, ?)'
-);
-
-const getRecentMessages = db.prepare(
-  'SELECT role, content FROM messages ORDER BY id DESC LIMIT ?'
-);
+const insertMessage = db.prepare('INSERT INTO messages (role, content) VALUES (?, ?)');
+const getRecentMessages = db.prepare('SELECT role, content FROM messages ORDER BY id DESC LIMIT ?');
 
 export function saveMessage(role, content) {
   insertMessage.run(role, content);
@@ -48,45 +42,45 @@ export function getHistory(limit = 15) {
   return getRecentMessages.all(limit).reverse();
 }
 
-// --- notes ---
+// --- pending_captures ---
 
-const insertNote = db.prepare(
-  'INSERT INTO notes (text, embedding, notion_url, tags) VALUES (?, ?, ?, ?)'
+const insertPending = db.prepare(
+  'INSERT INTO pending_captures (title, body, options, step) VALUES (?, ?, ?, ?)'
 );
+const selectPending = db.prepare('SELECT * FROM pending_captures ORDER BY id DESC LIMIT 1');
+const updatePendingStep = db.prepare('UPDATE pending_captures SET step = ? WHERE id = ?');
+const deletePending = db.prepare('DELETE FROM pending_captures WHERE id = ?');
 
-const getAllNotes = db.prepare(
-  'SELECT id, text, embedding, notion_url, tags FROM notes'
+export function savePending({ title, body, options, step = 'awaiting_category' }) {
+  db.prepare('DELETE FROM pending_captures').run();
+  insertPending.run(title, body ?? null, JSON.stringify(options), step);
+}
+
+export function getPending() {
+  const row = selectPending.get();
+  if (!row) return null;
+  return { ...row, options: JSON.parse(row.options) };
+}
+
+export function updatePendingToCustom(id) {
+  updatePendingStep.run('awaiting_custom', id);
+}
+
+export function clearPending() {
+  db.prepare('DELETE FROM pending_captures').run();
+}
+
+// --- docs_registry ---
+
+const upsertDoc = db.prepare(
+  'INSERT INTO docs_registry (category, doc_id) VALUES (?, ?) ON CONFLICT(category) DO UPDATE SET doc_id = excluded.doc_id'
 );
+const getDoc = db.prepare('SELECT doc_id FROM docs_registry WHERE category = ?');
 
-export function saveNote({ text, embedding, notionUrl, tags }) {
-  const embeddingBlob = Buffer.from(new Float32Array(embedding).buffer);
-  insertNote.run(text, embeddingBlob, notionUrl ?? null, tags ? JSON.stringify(tags) : null);
+export function saveDocId(category, docId) {
+  upsertDoc.run(category, docId);
 }
 
-export function getNoteEmbeddings() {
-  return getAllNotes.all().map((row) => ({
-    id: row.id,
-    text: row.text,
-    notionUrl: row.notion_url,
-    tags: row.tags ? JSON.parse(row.tags) : [],
-    embedding: new Float32Array(row.embedding.buffer),
-  }));
-}
-
-// --- notion_dbs ---
-
-const upsertDb = db.prepare(`
-  INSERT INTO notion_dbs (notion_id, name, description)
-  VALUES (?, ?, ?)
-  ON CONFLICT(notion_id) DO UPDATE SET name = excluded.name, description = excluded.description
-`);
-
-const getAllDbs = db.prepare('SELECT notion_id, name, description FROM notion_dbs');
-
-export function saveNotionDb(notionId, name, description) {
-  upsertDb.run(notionId, name, description);
-}
-
-export function getNotionDbs() {
-  return getAllDbs.all();
+export function getDocId(category) {
+  return getDoc.get(category)?.doc_id ?? null;
 }
