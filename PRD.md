@@ -14,7 +14,7 @@ People send themselves texts to remember things. These texts are messy, unstruct
 
 ## Solution
 
-An always-on assistant running on your own number via Baileys. Every message you send to yourself is intercepted, understood by an LLM, and routed to the right place — Notion for notes and memory, Google Calendar for time-bound events, Google Tasks for todos and lists. You can ask it to recall anything in natural language, and it finds it.
+An always-on assistant running on your own number via Baileys. Every message you send to yourself is intercepted, understood by an LLM, and routed to the right place — Google Keep or Google Docs for notes and memory, Google Calendar for time-bound events, Google Tasks for todos and lists. You can ask it to recall anything in natural language, and it finds it.
 
 ---
 
@@ -36,7 +36,7 @@ An always-on assistant running on your own number via Baileys. Every message you
 | Runtime | Node.js | Same language as Baileys |
 | LLM + Vision | Groq — Llama 4 Scout | Fast, free tier, handles text + images natively |
 | STT | Groq — Whisper Large v3 Turbo | Voice note transcription, same API |
-| Notes / Memory | Notion API | Structured persistence, readable |
+| Notes / Memory | Google Keep or Google Docs API | Structured persistence, readable, user choice |
 | Calendar | Google Calendar API | Native notifications, no scheduler needed |
 | Tasks / Lists | Google Tasks API | Native reminders, no scheduler needed |
 | Embeddings | @xenova/transformers — all-MiniLM-L6-v2 | Local, free, 23MB, fast after load |
@@ -79,7 +79,7 @@ An always-on assistant running on your own number via Baileys. Every message you
 ┌────────────────▼────────────────────────┐
 │           Action Router                 │
 ├──────────┬──────────┬──────────┬────────┤
-│  Notion  │  GCal    │ GTasks   │ Recall │
+│ Keep/Docs│  GCal    │ GTasks   │ Recall │
 │  notes   │  events  │  todos   │ search │
 │  ideas   │  meetings│  lists   │        │
 │  journal │  deadlines         │        │
@@ -87,7 +87,7 @@ An always-on assistant running on your own number via Baileys. Every message you
                  │
 ┌────────────────▼────────────────────────┐
 │     Baileys — Reply to self-chat        │
-│  confirmation + Notion link / answer   │
+│  confirmation + Keep/Docs link / answer │
 └─────────────────────────────────────────┘
 
 Separate cron process:
@@ -104,13 +104,11 @@ Groq classifies every message into one of these intents:
 
 | Intent | Example Input | Action |
 |---|---|---|
-| `capture_note` | "that idea about dynamic pricing" | Create Notion page |
-| `capture_thought` | "i think the reason i procrastinate is..." | Create Notion page (journal) |
+| `capture` | "linear.app" | Categorize → Store in Keep/Docs |
 | `add_task` | "submit report by friday" | Google Tasks |
 | `add_list_item` | "add eggs to groceries" | Google Tasks (named list) |
 | `create_event` | "meeting with john tomorrow 10am" | Google Calendar event |
 | `set_reminder` | "remind me to call dentist friday 3pm" | Google Calendar event with alert |
-| `recall` | "what was that library i mentioned" | Embedding search → Notion |
 | `query_schedule` | "am i free thursday afternoon" | Google Calendar read |
 | `converse` | "what do you think about this idea" | LLM reply, no storage |
 
@@ -122,15 +120,14 @@ Every Groq call returns this JSON shape — no exceptions:
 
 ```json
 {
-  "intent": "capture_note",
+  "intent": "capture",
   "entities": {
-    "title": "Dynamic pricing idea",
-    "body": "Adjust prices based on demand curves and competitor scraping",
-    "tags": ["idea", "startup", "pricing"],
+    "title": "Linear.app",
+    "body": "Project management tool",
     "datetime": null,
     "list_name": null
   },
-  "response": "Saved to Notion under Ideas ✓"
+  "response": "What is this?\n\n1. Website to try\n2. Tool / product\n3. Reference link\n4. Something else"
 }
 ```
 
@@ -138,70 +135,64 @@ The system prompt enforces this schema strictly. The action router reads `intent
 
 ---
 
-## Notion Structure
+## Storage Backend Choice
 
-Three seed databases created on first run. All others are created dynamically by the LLM based on usage:
+Users choose their preferred storage backend during setup:
 
-| Database | Used For |
-|---|---|
-| `📥 Inbox` | Unclassified captures, brain dumps |
-| `💡 Ideas` | Ideas, startup thoughts, tools to try |
-| `📓 Journal` | Reflections, thoughts, end-of-day notes |
+| Backend | Storage Method | Use Case |
+|---|---|---|
+| **Google Keep** | Individual notes per capture | Quick access, simple browsing |
+| **Google Docs** | One doc per category | Structured organization, easy sharing |
 
-Google Tasks handles all todos and lists natively (no Notion tasks DB — avoids duplication with GCal/GTasks ecosystem).
+Both backends store captures with format: `<Category>: <title>` with body and date footer.
 
 ---
 
-## Dynamic Schema Creation
+## Clarification-First Flow
 
-Groq decides where each item belongs by comparing it against existing databases. If no fit is found, it creates a new database and stores the item there.
+For capture intents, the assistant uses a two-step clarification process:
 
-**Fit check flow:**
+**Step 1: Category Selection**
 ```
-incoming item
-  → Groq receives lightweight DB context (names + one-line descriptions)
-  → fit found   → store in that DB
-  → no fit      → create new Notion DB with appropriate schema → store
-```
-
-**Lightweight DB context format** (passed with every message, not full schemas):
-```
-📥 Inbox — general captures
-💡 Ideas — startup and product ideas
-🎬 Reels — instagram reel links
-🧰 Tools — dev tools and resources
+User: "linear.app"
+Bot:  "What is this?
+       1. Website to try
+       2. Tool / product  
+       3. Reference link
+       4. Something else"
 ```
 
-This context is cached in SQLite and refreshed only when a database is created or renamed — not on every message.
+**Step 2a: Direct Storage (options 1-3)**
+```
+User: "2"
+Bot:  "Saved — Tool / product: linear.app (30 Mar 2026)"
+```
 
-New databases are created with sensible schemas based on content type (e.g., a Reels DB gets URL, platform, and notes properties; a Books DB gets title, author, and status).
+**Step 2b: Custom Category (option 4)**
+```
+User: "4"
+Bot:  "What is it? Describe in a few words."
+User: "competitor analysis"  
+Bot:  "Saved — Competitor analysis: linear.app (30 Mar 2026)"
+```
+
+This ensures user-confirmed categories while providing AI-suggested options for speed.
 
 ---
 
 ## Ambiguity Handling
 
-Groq only asks for clarification when it genuinely cannot determine intent — a bare link, an ambiguous name, a one-word message. For everything else it stores silently.
+The assistant uses the clarification-first flow for all capture intents. Groq suggests 3 most likely categories based on content analysis, with "Something else" as option 4 for custom labeling.
 
-When ambiguous, the bot replies with numbered options:
+When users pick option 4, they provide their own category label in free text. This gives users full control while maintaining speed through suggested options.
 
-```
-Not sure where this belongs. Pick one:
-
-1. Tool to try
-2. Article to read
-3. Resource / reference
-4. Just bookmark it
-```
-
-User replies with a number → stored correctly. No follow-up needed.
-
-This pattern is used sparingly — noisy clarifications defeat the purpose.
+This pattern is used consistently for all captures — ensuring every item gets a user-confirmed category.
 
 ---
 
 ## Semantic Recall
 
-Only triggered when `intent = recall`.
+*Note: Semantic recall is planned for future implementation.*
 
 ```
 query → all-MiniLM-L6-v2 → 384-dim vector
@@ -210,20 +201,6 @@ query → all-MiniLM-L6-v2 → 384-dim vector
       → top 5 results → injected into context
       → Groq generates answer
 ```
-
-SQLite schema for notes:
-```sql
-CREATE TABLE notes (
-  id INTEGER PRIMARY KEY,
-  text TEXT,
-  embedding BLOB,       -- Float32Array as binary blob
-  notion_url TEXT,
-  tags TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-Every note written to Notion is also embedded and stored here. Recall is local — no Notion search API needed for this.
 
 ---
 
@@ -293,11 +270,12 @@ Both jobs use Baileys to send a message to self — same chat, same thread.
 │   ├── context.js            # Build context for each message
 │   ├── groq.js               # LLM call + schema enforcement
 │   ├── router.js             # Intent → action dispatch
+│   ├── pipeline.js           # Main message processing pipeline
 │   ├── actions/
-│   │   ├── notion.js         # Notion API writes
+│   │   ├── gkeep.js          # Google Keep API writes
+│   │   ├── gdocs.js          # Google Docs API writes
 │   │   ├── gcal.js           # Google Calendar reads/writes
-│   │   ├── gtasks.js         # Google Tasks reads/writes
-│   │   └── recall.js         # Embedding search
+│   │   └── gtasks.js         # Google Tasks reads/writes
 │   ├── embeddings.js         # @xenova/transformers wrapper
 │   ├── db.js                 # SQLite setup + queries
 │   └── cron.js               # Morning briefing + weekly nudge
@@ -313,15 +291,12 @@ Both jobs use Baileys to send a message to self — same chat, same thread.
 
 ```env
 GROQ_API_KEY=
-NOTION_API_KEY=
-NOTION_INBOX_DB_ID=
-NOTION_IDEAS_DB_ID=
-NOTION_JOURNAL_DB_ID=
+STORAGE_BACKEND=keep           # 'keep' or 'docs'
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REFRESH_TOKEN=
-BRIEFING_TIME=08:00        # Cron time for morning briefing
-SELF_CHAT_JID=             # Your WhatsApp JID (auto-detected on first run)
+BRIEFING_TIME=08:00           # Cron time for morning briefing
+SELF_CHAT_JID=                # Your WhatsApp JID (auto-detected on first run)
 ```
 
 ---
@@ -331,9 +306,9 @@ SELF_CHAT_JID=             # Your WhatsApp JID (auto-detected on first run)
 Run `npx second-brain` — the TUI handles everything:
 
 1. QR code rendered in terminal → scan with WhatsApp
-2. Enter Groq + Notion API keys (masked)
-3. Google OAuth → opens browser → token saved locally
-4. Seed Notion databases auto-created
+2. Enter Groq API key (masked)
+3. Choose storage backend (Keep or Docs)
+4. Google OAuth → opens browser → token saved locally
 5. Ready — text yourself
 
 ---
@@ -357,16 +332,15 @@ Welcome to Second Brain
 
 ▶ Scan QR to connect WhatsApp    [QR rendered in terminal via qrcode-terminal]
 ▶ Enter Groq API key             [masked input]
-▶ Enter Notion API key           [masked input]
+▶ Choose storage backend         [Keep or Docs selection]
 ▶ Connect Google Account         [opens browser → OAuth → token saved locally]
-▶ Setting up Notion workspace... [spinner — creates seed databases]
 ▶ All done. Text yourself to start.
 ```
 
 - All inputs masked in terminal
 - OAuth opens system browser, callback handled locally
 - Credentials written to `.env` in current directory
-- Seed Notion databases created automatically
+- Storage backend choice persisted in environment
 - Session persists — QR only scanned once
 
 ---
@@ -375,9 +349,9 @@ Welcome to Second Brain
 
 - Multi-user support
 - Web dashboard / UI
-- Notion AI features
+- Semantic search / recall (planned for future)
 - WhatsApp group support
-- Any integrations beyond Notion + Google
+- Any integrations beyond Google ecosystem
 
 ---
 
