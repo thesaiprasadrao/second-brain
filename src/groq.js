@@ -64,7 +64,7 @@ export async function classify(userText, history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages,
     temperature: 0.2,
     response_format: { type: 'json_object' },
@@ -81,7 +81,7 @@ export async function categorize(userText, history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages,
     temperature: 0.3,
     response_format: { type: 'json_object' },
@@ -99,7 +99,7 @@ export async function answerRecall(query, notes = [], history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'llama3-70b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages,
     temperature: 0.2
   });
