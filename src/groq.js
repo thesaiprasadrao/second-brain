@@ -11,13 +11,13 @@ INTENTS:
 - set_reminder     : reminders at a specific time
 - query_schedule   : asking about upcoming events or free time
 - recall           : asking to retrieve or summarize past notes or ideas
-- capture          : anything else — ideas, tools, links, notes, thoughts
-- converse         : casual chat, questions, no storage needed
+- capture          : ideas, tools, links, notes, thoughts to save
+- converse         : greetings, casual chat, questions not meant to be saved
 
 Rules:
-- If the user is greeting, chatting, or asking a question, use "converse"
-- If the message ends with a question mark and isn't clearly a task/event, use "converse"
-- Use "capture" for statements or fragments meant to be saved, not for questions
+- Greetings and small talk are "converse"
+- Questions are "converse" unless clearly about schedule or recall
+- Use "capture" for statements or fragments meant to be saved
 - For recall, set "query" to the user's information need
 
 RESPONSE SCHEMA:
@@ -33,7 +33,7 @@ RESPONSE SCHEMA:
   "query": "<recall query or null, only for recall>"
 }`;
 
-const CATEGORIZE_PROMPT = `You are a personal second brain assistant. The user sent you something to save. Your job is to suggest the 3 most likely categories for what this is.
+const CATEGORIZE_PROMPT = `You are a personal second brain assistant. The user sent you something to save. Suggest the 3 most likely categories.
 
 Return ONLY valid JSON in this exact schema:
 {
@@ -64,7 +64,7 @@ export async function classify(userText, history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    model: 'llama-3.1-70b-instruct',
     messages,
     temperature: 0.2,
     response_format: { type: 'json_object' },
@@ -81,7 +81,7 @@ export async function categorize(userText, history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    model: 'llama-3.1-70b-instruct',
     messages,
     temperature: 0.3,
     response_format: { type: 'json_object' },
@@ -99,7 +99,7 @@ export async function answerRecall(query, notes = [], history = []) {
   ];
 
   const res = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    model: 'llama-3.1-70b-instruct',
     messages,
     temperature: 0.2
   });

@@ -26,6 +26,9 @@ let reconnectTimer = null;
 let reconnectAttempts = 0;
 const processedMessages = new Set();
 const MAX_PROCESSED = 500;
+const lastSeen = new Map();
+const DEDUPE_WINDOW_MS = 2000;
+const MAX_SEEN = 500;
 
 function isWhatsAppEnabled() {
   return (process.env.CHANNEL ?? 'whatsapp') === 'whatsapp';
@@ -159,6 +162,16 @@ async function connect() {
         : null;
 
       if (!text && !mediaType) continue;
+
+      const dedupeKey = `${jid}:${text ?? `[${mediaType}]`}`;
+      const now = Date.now();
+      const last = lastSeen.get(dedupeKey);
+      if (last && now - last < DEDUPE_WINDOW_MS) continue;
+      lastSeen.set(dedupeKey, now);
+      if (lastSeen.size > MAX_SEEN) {
+        const oldest = lastSeen.keys().next().value;
+        lastSeen.delete(oldest);
+      }
 
       saveMessage('user', text ?? `[${mediaType}]`);
       log.info(`MSG  in: ${text ?? `[${mediaType}]`}`);
