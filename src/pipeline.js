@@ -17,6 +17,12 @@ const DIRECT_INTENTS = new Set(['add_task', 'add_list_item', 'create_event', 'se
 const SKIP_ENRICH = new Set(['skip', 'no', 'nah', 'n']);
 const MERGE_WINDOW_MS = 2 * 60 * 1000;
 const GREETINGS = new Set(['hi', 'hey', 'hello', 'yo', 'sup']);
+const CATEGORY_OVERRIDE = [
+  /^add (it )?to (.+)$/i,
+  /^save (it )?to (.+)$/i,
+  /^put (it )?in (.+)$/i,
+  /^move (it )?to (.+)$/i
+];
 
 function getStorage() {
   const backend = process.env.STORAGE_BACKEND ?? 'docs';
@@ -86,6 +92,13 @@ export async function pipeline(msg) {
     if (SKIP_ENRICH.has(reply.toLowerCase())) {
       clearPending();
       return 'Got it.';
+    }
+
+    const override = extractCategoryOverride(reply);
+    if (override) {
+      await saveCapture(override, pending.title, pending.body);
+      clearPending();
+      return `Saved — ${override}: ${pending.title} (${today()}).`;
     }
 
     if (/^\d+\./.test(reply)) {
@@ -172,6 +185,22 @@ function parseMessageTime(ts) {
   const normalized = ts.replace(' ', 'T');
   const parsed = Date.parse(normalized);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function extractCategoryOverride(text) {
+  const cleaned = text.trim().replace(/[.?!]+$/g, '');
+  for (const pattern of CATEGORY_OVERRIDE) {
+    const match = cleaned.match(pattern);
+    if (match?.[2]) {
+      const category = match[2].trim();
+      if (!category) return null;
+      return category
+        .replace(/^the\s+/i, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+  }
+  return null;
 }
 
 function isGreeting(text) {
