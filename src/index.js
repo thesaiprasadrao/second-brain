@@ -49,11 +49,20 @@ async function connect() {
     auth: state, 
     logger, 
     version,
-    // Add connection stability options
+    // Improved connection stability settings
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 60000,
-    keepAliveIntervalMs: 30000,
-    markOnlineOnConnect: false
+    keepAliveIntervalMs: 25000,
+    markOnlineOnConnect: false,
+    getMessage: async (key) => {
+      // Return empty message to avoid conflicts
+      return { conversation: "" };
+    },
+    // Add browser info to reduce disconnections
+    browser: ['SecondBrain', 'Desktop', '1.0.0'],
+    // Reduce message retry frequency
+    retryRequestDelayMs: 250,
+    maxMsgRetryCount: 3
   });
 
   sock.ev.on('creds.update', saveCreds);
@@ -76,8 +85,10 @@ async function connect() {
 
       // Add exponential backoff for reconnection stability
       if (reconnectTimer) return;
-      const backoffDelay = Math.min(2000 * Math.pow(2, reconnectAttempts), 30000);
+      const backoffDelay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
       reconnectAttempts++;
+      
+      log.info(`Waiting ${backoffDelay}ms before reconnect (attempt ${reconnectAttempts})`);
       
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
@@ -98,24 +109,24 @@ async function connect() {
     if (type !== 'notify') return;
 
     for (const msg of messages) {
-      // Debug logging
-      log.info(`Message received - fromMe: ${msg.key.fromMe}, jid: ${msg.key.remoteJid}, type: ${type}`);
-      
       if (!msg.key.fromMe) continue;
+      
       const jid = msg.key.remoteJid;
-      const selfJid = sock.user?.id?.replace(/:.*@/, '@');
       
-      log.info(`JID check - jid: ${jid}, selfJid: ${selfJid}, match: ${jid === selfJid}`);
+      // Use configured SELF_CHAT_JID from .env
+      const selfJid = process.env.SELF_CHAT_JID;
       
-      // Handle both @s.whatsapp.net and @lid formats for self-messages
-      const isDirectChat = jid?.endsWith('@s.whatsapp.net');
-      const isSelfLinkedDevice = jid?.endsWith('@lid');
+      if (!selfJid) {
+        log.error('SELF_CHAT_JID not configured in .env - run setup or add manually');
+        continue;
+      }
       
-      if (!isDirectChat && !isSelfLinkedDevice) continue;
+      // ONLY process messages sent to self-chat (Message Yourself)
+      const isSelfChat = jid === selfJid;
       
-      // For linked device messages (@lid), they're automatically self-messages when fromMe=true
-      // For direct chats (@s.whatsapp.net), check if it matches our JID
-      if (isDirectChat && jid !== selfJid) continue;
+      log.info(`Message check - jid: ${jid}, selfJid: ${selfJid}, isSelfChat: ${isSelfChat}`);
+      
+      if (!isSelfChat) continue;
 
       const text =
         msg.message?.conversation ||
@@ -136,18 +147,25 @@ async function connect() {
       try {
         const reply = await pipeline(msg);
         if (reply) {
+          log.info(`Generated reply: ${reply}`);
           try {
-            await sock.sendMessage(jid, { text: reply });
+            log.info(`Attempting to send to JID: ${jid}`);
+            const result = await sock.sendMessage(jid, { text: reply });
+            log.info(`Send result: ${JSON.stringify(result)}`);
             saveMessage('assistant', reply);
             log.info(`MSG out: ${reply}`);
             console.log(`\n← ${reply}\n> `);
           } catch (sendErr) {
             log.error(`Send failed: ${sendErr.message}`);
+            log.error(`Send error stack: ${sendErr.stack}`);
             console.log(`\nFailed to send: ${reply}\nError: ${sendErr.message}\n> `);
           }
+        } else {
+          log.info(`Pipeline returned null/empty reply`);
         }
       } catch (err) {
         log.error(`Pipeline: ${err.message}`);
+        log.error(`Pipeline error stack: ${err.stack}`);
         try {
           await sock.sendMessage(jid, { text: 'Something went wrong. Try again.' });
         } catch (sendErr) {
