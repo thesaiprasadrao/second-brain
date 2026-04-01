@@ -2,6 +2,19 @@ import { google } from 'googleapis';
 import { getDocId, saveDocId } from '../db.js';
 
 function getAuth() {
+  // Check if service account is configured
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_PATH) {
+    return new google.auth.GoogleAuth({
+      keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_PATH,
+      scopes: [
+        'https://www.googleapis.com/auth/keep',
+        'https://www.googleapis.com/auth/documents',
+        'https://www.googleapis.com/auth/drive.file'
+      ]
+    });
+  }
+  
+  // Fallback to OAuth2 if service account not configured
   const auth = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET
