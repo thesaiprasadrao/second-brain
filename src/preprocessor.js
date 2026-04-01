@@ -8,8 +8,20 @@ export async function preprocess(msg) {
   const audio = msg.message?.audioMessage;
   const image = msg.message?.imageMessage;
 
-  if (audio) return transcribeAudio(msg);
-  if (image) return describeImage(msg);
+  if (audio) {
+    try {
+      return await transcribeAudio(msg);
+    } catch {
+      return null;
+    }
+  }
+  if (image) {
+    try {
+      return await describeImage(msg);
+    } catch {
+      return null;
+    }
+  }
 
   return (
     msg.message?.conversation ||

@@ -82,9 +82,13 @@ export async function pipeline(msg) {
       return 'Got it.';
     }
 
-    await saveCapture(category, `Follow-up: ${pending.title}`, reply);
-    clearPending();
-    return `Added context for ${pending.title}.`;
+    if (/^\d+\./.test(reply)) {
+      clearPending();
+    } else {
+      await saveCapture(category, `Follow-up: ${pending.title}`, reply);
+      clearPending();
+      return `Added context for ${pending.title}.`;
+    }
   }
 
   // No pending — classify the message
@@ -92,6 +96,10 @@ export async function pipeline(msg) {
   const { history } = buildContext();
   const result = await classify(mergedText, history);
   const { intent, entities, response, query } = result;
+
+  if (text.trim().endsWith('?') && intent === 'capture') {
+    return response ?? null;
+  }
 
   if (intent === 'recall') {
     const recallQuery = query ?? mergedText;

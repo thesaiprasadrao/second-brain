@@ -24,6 +24,8 @@ let tuiStarted = false;
 let cronStarted = false;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
+const processedMessages = new Set();
+const MAX_PROCESSED = 500;
 
 function isWhatsAppEnabled() {
   return (process.env.CHANNEL ?? 'whatsapp') === 'whatsapp';
@@ -127,12 +129,23 @@ async function connect() {
         continue;
       }
       
-      // ONLY process messages sent to self-chat (Message Yourself)
-      const isSelfChat = jid === selfJid;
+      // Process self-chat and linked-device self messages
+      const isSelfChat = jid === selfJid || (jid?.endsWith('@lid') && msg.key.fromMe);
       
       log.info(`Message check - jid: ${jid}, selfJid: ${selfJid}, isSelfChat: ${isSelfChat}`);
       
       if (!isSelfChat) continue;
+
+      const msgId = msg.key?.id;
+      if (msgId && processedMessages.has(msgId)) continue;
+
+      if (msgId) {
+        processedMessages.add(msgId);
+        if (processedMessages.size > MAX_PROCESSED) {
+          const oldest = processedMessages.values().next().value;
+          processedMessages.delete(oldest);
+        }
+      }
 
       const text =
         msg.message?.conversation ||
