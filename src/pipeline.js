@@ -101,6 +101,13 @@ export async function pipeline(msg) {
     return response ?? null;
   }
 
+  if (intent === 'capture' && text.trim().split(/\s+/).length <= 2) {
+    const lower = text.trim().toLowerCase();
+    if (['hi', 'hey', 'hello', 'yo', 'sup'].includes(lower)) {
+      return response ?? null;
+    }
+  }
+
   if (intent === 'recall') {
     const recallQuery = query ?? mergedText;
     const recallContext = await buildRecallContext(recallQuery, 5);

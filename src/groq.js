@@ -14,6 +14,12 @@ INTENTS:
 - capture          : anything else — ideas, tools, links, notes, thoughts
 - converse         : casual chat, questions, no storage needed
 
+Rules:
+- If the user is greeting, chatting, or asking a question, use "converse"
+- If the message ends with a question mark and isn't clearly a task/event, use "converse"
+- Use "capture" for statements or fragments meant to be saved, not for questions
+- For recall, set "query" to the user's information need
+
 RESPONSE SCHEMA:
 {
   "intent": "<one of the intents above>",
@@ -39,6 +45,7 @@ Return ONLY valid JSON in this exact schema:
 
 Rules:
 - options must be exactly 3 short labels (2-4 words each), most probable first
+- options should be specific and not generic greetings or chat labels
 - title should be clean and concise
 - question must match the options exactly in order`;
 
