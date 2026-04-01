@@ -8,6 +8,7 @@ import { saveMessage } from './db.js';
 import { pipeline } from './pipeline.js';
 import { startCron } from './cron.js';
 import { log } from './logger.js';
+import { startTelegram } from './telegram.js';
 
 const logger = pino({ level: 'fatal' });
 
@@ -23,6 +24,10 @@ let tuiStarted = false;
 let cronStarted = false;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
+
+function isWhatsAppEnabled() {
+  return (process.env.CHANNEL ?? 'whatsapp') === 'whatsapp';
+}
 
 function startTUI(sock, selfJid) {
   if (tuiStarted) return;
@@ -42,6 +47,7 @@ function startTUI(sock, selfJid) {
 }
 
 async function connect() {
+  if (!isWhatsAppEnabled()) return null;
   const { state, saveCreds } = await useMultiFileAuthState('auth');
   const { version } = await fetchLatestBaileysVersion();
   
@@ -178,7 +184,24 @@ async function connect() {
   return sock;
 }
 
-connect().catch((err) => {
-  log.error(`Fatal: ${err.message}`);
-  process.exit(1);
-});
+const channel = (process.env.CHANNEL ?? 'whatsapp').toLowerCase();
+
+if (channel === 'telegram') {
+  const bot = startTelegram();
+  if (!bot) process.exit(1);
+  if (!cronStarted) {
+    startCron({
+      sendMessage: async (_jid, message) => {
+        const chatId = process.env.TELEGRAM_CHAT_ID;
+        if (!chatId) return;
+        await bot.sendMessage(chatId, message.text ?? '');
+      }
+    });
+    cronStarted = true;
+  }
+} else {
+  connect().catch((err) => {
+    log.error(`Fatal: ${err.message}`);
+    process.exit(1);
+  });
+}

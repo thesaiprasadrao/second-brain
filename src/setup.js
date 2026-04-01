@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import * as p from '@clack/prompts';
-import { writeFileSync, existsSync, readFileSync } from 'fs';
+import { writeFileSync, existsSync, readFileSync, rmSync } from 'fs';
 import { createServer } from 'http';
 import { spawn } from 'child_process';
 import { google } from 'googleapis';
@@ -47,40 +47,52 @@ function writeEnv(vars) {
 
 async function connectWhatsApp() {
   const s = p.spinner();
-  s.start('Connecting to WhatsApp…');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    s.start('Connecting to WhatsApp…');
 
-  const { state, saveCreds } = await useMultiFileAuthState('auth');
-  const { version } = await fetchLatestBaileysVersion();
-  const sock = makeWASocket({ 
-    auth: state, 
-    logger: pino({ level: 'silent' }), 
-    version,
-    browser: ['SecondBrain', 'Desktop', '1.0.0']
-  });
-  sock.ev.on('creds.update', saveCreds);
-
-  return new Promise((resolve, reject) => {
-    sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-      if (qr) {
-        s.stop('Scan this QR code with WhatsApp:');
-        qrcode.generate(qr, { small: true });
-        s.start('Waiting for scan…');
-      }
-      if (connection === 'open') {
-        s.stop('WhatsApp connected.');
-        sock.end(); // Close connection after successful auth
-        resolve();
-      }
-      if (connection === 'close') {
-        const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
-        if (code === DisconnectReason.loggedOut) {
-          s.stop('Logged out. Please try again.');
-          reject(new Error('WhatsApp logged out.'));
-        }
-        // Other close reasons are fine during setup - we just need the auth saved
-      }
+    const { state, saveCreds } = await useMultiFileAuthState('auth');
+    const { version } = await fetchLatestBaileysVersion();
+    const sock = makeWASocket({
+      auth: state,
+      logger: pino({ level: 'silent' }),
+      version,
+      browser: ['SecondBrain', 'Desktop', '1.0.0']
     });
-  });
+    sock.ev.on('creds.update', saveCreds);
+
+    try {
+      await new Promise((resolve, reject) => {
+        sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
+          if (qr) {
+            s.stop('Scan this QR code with WhatsApp:');
+            qrcode.generate(qr, { small: true });
+            s.start('Waiting for scan…');
+          }
+          if (connection === 'open') {
+            s.stop('WhatsApp connected.');
+            sock.end();
+            resolve();
+          }
+          if (connection === 'close') {
+            const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
+            if (code === DisconnectReason.loggedOut) {
+              reject(new Error('WhatsApp logged out.'));
+            }
+          }
+        });
+      });
+      return;
+    } catch (err) {
+      sock.end();
+      if (err?.message !== 'WhatsApp logged out.' || attempt === 1) {
+        s.stop(err?.message || 'WhatsApp connection failed.');
+        throw err;
+      }
+
+      s.stop('Logged out. Clearing auth and retrying…');
+      rmSync('auth', { recursive: true, force: true });
+    }
+  }
 }
 
 async function googleOAuth(clientId, clientSecret, backend) {
@@ -109,17 +121,44 @@ async function googleOAuth(clientId, clientSecret, backend) {
 export async function setup() {
   p.intro('Welcome to Second Brain');
 
-  await connectWhatsApp();
-
-  const phoneNumber = await p.text({ 
-    message: 'Your WhatsApp phone number (with country code, e.g. 919876543210)',
-    validate: (v) => {
-      if (!v || !/^\d{10,15}$/.test(v)) return 'Enter digits only, 10-15 characters (e.g. 919876543210)';
-    }
+  const channel = await p.select({
+    message: 'Which channel should Second Brain use?',
+    options: [
+      { value: 'whatsapp', label: 'WhatsApp', hint: 'message yourself' },
+      { value: 'telegram', label: 'Telegram', hint: 'bot + private chat' }
+    ]
   });
-  if (p.isCancel(phoneNumber)) process.exit(0);
-  
-  const selfChatJid = `${phoneNumber}@s.whatsapp.net`;
+  if (p.isCancel(channel)) process.exit(0);
+
+  let selfChatJid = '';
+  let telegramToken = '';
+  let telegramChatId = '';
+
+  if (channel === 'whatsapp') {
+    await connectWhatsApp();
+
+    const phoneNumber = await p.text({
+      message: 'Your WhatsApp phone number (with country code, e.g. 919876543210)',
+      validate: (v) => {
+        if (!v || !/^\d{10,15}$/.test(v)) return 'Enter digits only, 10-15 characters (e.g. 919876543210)';
+      }
+    });
+    if (p.isCancel(phoneNumber)) process.exit(0);
+
+    selfChatJid = `${phoneNumber}@s.whatsapp.net`;
+  } else {
+    telegramToken = await p.password({ message: 'Telegram bot token' });
+    if (p.isCancel(telegramToken)) process.exit(0);
+
+    telegramChatId = await p.text({
+      message: 'Telegram chat ID (send /start to your bot, then paste the chat ID)',
+      placeholder: '123456789',
+      validate: (v) => {
+        if (!v || !/^-?\d+$/.test(v)) return 'Enter a numeric chat ID (e.g. 123456789)';
+      }
+    });
+    if (p.isCancel(telegramChatId)) process.exit(0);
+  }
 
   const groqKey = await p.password({ message: 'Groq API key' });
   if (p.isCancel(groqKey)) process.exit(0);
@@ -148,7 +187,10 @@ export async function setup() {
     GOOGLE_CLIENT_SECRET: googleClientSecret,
     GOOGLE_REFRESH_TOKEN: refreshToken,
     BRIEFING_TIME: '08:00',
+    CHANNEL: channel,
     SELF_CHAT_JID: selfChatJid,
+    TELEGRAM_BOT_TOKEN: telegramToken,
+    TELEGRAM_CHAT_ID: telegramChatId,
   });
 
   p.outro('All done. Starting Second Brain in the background…');
