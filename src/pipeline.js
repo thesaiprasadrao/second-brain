@@ -15,6 +15,8 @@ import { embed } from './embeddings.js';
 
 const DIRECT_INTENTS = new Set(['add_task', 'add_list_item', 'create_event', 'set_reminder', 'query_schedule']);
 const SKIP_ENRICH = new Set(['skip', 'no', 'nah', 'n']);
+const CONFIRM_YES = new Set(['yes', 'y', 'confirm', 'save', 'ok', 'okay']);
+const CONFIRM_NO = new Set(['no', 'n', 'cancel', 'stop']);
 const MERGE_WINDOW_MS = 2 * 60 * 1000;
 const GREETINGS = new Set(['hi', 'hey', 'hello', 'yo', 'sup']);
 const CATEGORY_OVERRIDE = [
@@ -85,6 +87,23 @@ export async function pipeline(msg) {
     return `Saved — ${category}: ${pending.title} (${today()})`;
   }
 
+  if (pending?.step === 'awaiting_confirm') {
+    const reply = text.trim().toLowerCase();
+    if (CONFIRM_NO.has(reply)) {
+      clearPending();
+      return 'Okay, not saved.';
+    }
+
+    if (CONFIRM_YES.has(reply)) {
+      const category = pending.options?.[0] ?? 'Inbox';
+      await saveCapture(category, pending.title, pending.body);
+      clearPending();
+      return `Saved — ${category}: ${pending.title} (${today()}).`;
+    }
+
+    return 'Please reply yes or no.';
+  }
+
   if (pending?.step === 'awaiting_enrichment') {
     const reply = text.trim();
     const category = pending.options?.[0] ?? 'Inbox';
@@ -149,9 +168,8 @@ export async function pipeline(msg) {
   // Capture flow — ask user to categorize
   const cat = await categorize(mergedText, history);
   const category = cat.options?.[0] ?? 'Inbox';
-  await saveCapture(category, cat.title, cat.body);
-  savePending({ title: cat.title, body: cat.body, options: [category], step: 'awaiting_enrichment' });
-  return `Saved — ${category}: ${cat.title} (${today()}). Add why it matters or a next step? (reply "skip" to ignore)`;
+  savePending({ title: cat.title, body: cat.body, options: [category], step: 'awaiting_confirm' });
+  return `Save this as "${category}: ${cat.title}"? (yes/no)`;
 }
 
 function mergeWithRecent(text) {
