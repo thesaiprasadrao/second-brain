@@ -10,6 +10,7 @@ INTENTS:
 - create_event     : calendar events, meetings
 - set_reminder     : reminders at a specific time
 - query_schedule   : asking about upcoming events or free time
+- recall           : asking to retrieve or summarize past notes or ideas
 - capture          : anything else — ideas, tools, links, notes, thoughts
 - converse         : casual chat, questions, no storage needed
 
@@ -22,7 +23,8 @@ RESPONSE SCHEMA:
     "datetime": "<ISO 8601 or null>",
     "list_name": "<list name or null>"
   },
-  "response": "<short reply under 2 sentences>"
+  "response": "<short reply under 2 sentences>",
+  "query": "<recall query or null, only for recall>"
 }`;
 
 const CATEGORIZE_PROMPT = `You are a personal second brain assistant. The user sent you something to save. Your job is to suggest the 3 most likely categories for what this is.
@@ -39,6 +41,13 @@ Rules:
 - options must be exactly 3 short labels (2-4 words each), most probable first
 - title should be clean and concise
 - question must match the options exactly in order`;
+
+const RECALL_PROMPT = `You are a personal second brain assistant. Use the provided notes to answer the user's question.
+
+Rules:
+- Only use the provided notes
+- If the notes don't contain the answer, say you couldn't find it
+- Keep the answer under 4 sentences`;
 
 export async function classify(userText, history = []) {
   const messages = [
@@ -74,3 +83,19 @@ export async function categorize(userText, history = []) {
   return JSON.parse(res.choices[0]?.message?.content);
 }
 
+export async function answerRecall(query, notes = [], history = []) {
+  const messages = [
+    { role: 'system', content: RECALL_PROMPT },
+    ...history.map(({ role, content }) => ({ role, content })),
+    { role: 'system', content: `Notes:\n${JSON.stringify(notes)}` },
+    { role: 'user', content: query }
+  ];
+
+  const res = await groq.chat.completions.create({
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    messages,
+    temperature: 0.2
+  });
+
+  return res.choices[0]?.message?.content?.trim() ?? null;
+}

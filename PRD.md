@@ -2,7 +2,7 @@
 
 ## Overview
 
-A self-hosted, personal AI assistant that lives inside WhatsApp. You text yourself exactly as you always have — messy, unstructured, stream-of-consciousness — and the assistant silently organizes, stores, schedules, and recalls everything. No new app. No new behavior. Just your self-chat, made useful.
+A self-hosted, personal AI assistant that lives inside WhatsApp or Telegram. You text yourself exactly as you always have — messy, unstructured, stream-of-consciousness — and the assistant silently organizes, stores, schedules, and recalls everything. No new app. No new behavior. Just your self-chat, made useful.
 
 ---
 
@@ -14,7 +14,7 @@ People send themselves texts to remember things. These texts are messy, unstruct
 
 ## Solution
 
-An always-on assistant running on your own number via Baileys. Every message you send to yourself is intercepted, understood by an LLM, and routed to the right place — Google Keep or Google Docs for notes and memory, Google Calendar for time-bound events, Google Tasks for todos and lists. You can ask it to recall anything in natural language, and it finds it.
+An always-on assistant running on your own number via Baileys (WhatsApp) or a Telegram bot. Every message you send to yourself is intercepted, understood by an LLM, and routed to the right place — Google Keep or Google Docs for notes and memory, Google Calendar for time-bound events, Google Tasks for todos and lists. You can ask it to recall anything in natural language, and it finds it.
 
 ---
 
@@ -33,6 +33,7 @@ An always-on assistant running on your own number via Baileys. Every message you
 | Layer | Choice | Reason |
 |---|---|---|
 | WhatsApp | Baileys (Node.js) | Unofficial, free, runs on personal number |
+| Telegram | node-telegram-bot-api | Bot-based, no phone session |
 | Runtime | Node.js | Same language as Baileys |
 | LLM + Vision | Groq — Llama 4 Scout | Fast, free tier, handles text + images natively |
 | STT | Groq — Whisper Large v3 Turbo | Voice note transcription, same API |
@@ -148,55 +149,37 @@ Both backends store captures with format: `<Category>: <title>` with body and da
 
 ---
 
-## Clarification-First Flow
+## Idea-First Capture Flow
 
-For capture intents, the assistant uses a two-step clarification process:
+For capture intents, the assistant saves immediately and optionally asks for a single follow-up:
 
-**Step 1: Category Selection**
+**Step 1: Auto-save**
 ```
 User: "linear.app"
-Bot:  "What is this?
-       1. Website to try
-       2. Tool / product  
-       3. Reference link
-       4. Something else"
+Bot:  "Saved — Website to try: linear.app (30 Mar 2026). Add why it matters or a next step? (reply \"skip\" to ignore)"
 ```
 
-**Step 2a: Direct Storage (options 1-3)**
+**Step 2: Optional context**
 ```
-User: "2"
-Bot:  "Saved — Tool / product: linear.app (30 Mar 2026)"
-```
-
-**Step 2b: Custom Category (option 4)**
-```
-User: "4"
-Bot:  "What is it? Describe in a few words."
-User: "competitor analysis"  
-Bot:  "Saved — Competitor analysis: linear.app (30 Mar 2026)"
+User: "compare pricing vs Notion"
+Bot:  "Added context for linear.app."
 ```
 
-This ensures user-confirmed categories while providing AI-suggested options for speed.
+This keeps idea capture fast and low-friction while still letting users add meaning.
 
 ---
 
 ## Ambiguity Handling
 
-The assistant uses the clarification-first flow for all capture intents. Groq suggests 3 most likely categories based on content analysis, with "Something else" as option 4 for custom labeling.
-
-When users pick option 4, they provide their own category label in free text. This gives users full control while maintaining speed through suggested options.
-
-This pattern is used consistently for all captures — ensuring every item gets a user-confirmed category.
+The assistant auto-saves captures and uses suggested categories internally. If the user wants to refine, they can add context in the follow-up prompt. This keeps flow fast while still allowing precision.
 
 ---
 
 ## Semantic Recall
 
-*Note: Semantic recall is planned for future implementation.*
-
 ```
 query → all-MiniLM-L6-v2 → 384-dim vector
-      → load all note embeddings from SQLite
+      → load embeddings from SQLite
       → cosine similarity against each
       → top 5 results → injected into context
       → Groq generates answer
@@ -249,6 +232,7 @@ This enables multi-turn like:
 |---|---|---|
 | Morning Briefing | Daily 8:00am | Today's GCal events + overdue GTasks |
 | Weekly Nudge | Monday 9:00am | Unresolved tasks from last week |
+| Idea Digest | Sunday 6:00pm | Top ideas captured in the last 7 days |
 
 Both jobs use Baileys to send a message to self — same chat, same thread.
 
@@ -292,11 +276,16 @@ Both jobs use Baileys to send a message to self — same chat, same thread.
 ```env
 GROQ_API_KEY=
 STORAGE_BACKEND=keep           # 'keep' or 'docs'
+APP_GOOGLE_CLIENT_ID=
+APP_GOOGLE_CLIENT_SECRET=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REFRESH_TOKEN=
 BRIEFING_TIME=08:00           # Cron time for morning briefing
-SELF_CHAT_JID=                # Your WhatsApp JID (auto-detected on first run)
+CHANNEL=whatsapp              # 'whatsapp' or 'telegram'
+SELF_CHAT_JID=                # Your WhatsApp JID
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
 ```
 
 ---

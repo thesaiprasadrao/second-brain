@@ -27,19 +27,40 @@ db.exec(`
     category TEXT NOT NULL UNIQUE,
     doc_id   TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS captures (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    title      TEXT    NOT NULL,
+    body       TEXT,
+    category   TEXT    NOT NULL,
+    source     TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS capture_embeddings (
+    capture_id INTEGER PRIMARY KEY,
+    vector     TEXT NOT NULL,
+    FOREIGN KEY(capture_id) REFERENCES captures(id) ON DELETE CASCADE
+  );
 `);
+
+db.exec('PRAGMA foreign_keys = ON');
 
 // --- messages ---
 
 const insertMessage = db.prepare('INSERT INTO messages (role, content) VALUES (?, ?)');
-const getRecentMessages = db.prepare('SELECT role, content FROM messages ORDER BY id DESC LIMIT ?');
+const selectRecentMessages = db.prepare('SELECT role, content, created_at FROM messages ORDER BY id DESC LIMIT ?');
 
 export function saveMessage(role, content) {
   insertMessage.run(role, content);
 }
 
 export function getHistory(limit = 15) {
-  return getRecentMessages.all(limit).reverse();
+  return selectRecentMessages.all(limit).reverse();
+}
+
+export function getRecentMessages(limit = 10) {
+  return selectRecentMessages.all(limit).reverse();
 }
 
 // --- pending_captures ---
@@ -83,4 +104,51 @@ export function saveDocId(category, docId) {
 
 export function getDocId(category) {
   return getDoc.get(category)?.doc_id ?? null;
+}
+
+// --- captures ---
+
+const insertCapture = db.prepare(
+  'INSERT INTO captures (title, body, category, source) VALUES (?, ?, ?, ?)'
+);
+const listCaptures = db.prepare(
+  'SELECT id, title, body, category, created_at, source FROM captures ORDER BY id DESC LIMIT ?'
+);
+const listCapturesSince = db.prepare(
+  'SELECT id, title, body, category, created_at, source FROM captures WHERE datetime(created_at) >= datetime(?) ORDER BY id DESC'
+);
+
+export function saveCaptureRecord({ title, body, category, source }) {
+  const info = insertCapture.run(title, body ?? null, category, source ?? null);
+  return info.lastInsertRowid;
+}
+
+export function getCaptures(limit = 100) {
+  return listCaptures.all(limit);
+}
+
+export function getCapturesSince(dateTime) {
+  return listCapturesSince.all(dateTime);
+}
+
+// --- capture_embeddings ---
+
+const upsertEmbedding = db.prepare(
+  'INSERT INTO capture_embeddings (capture_id, vector) VALUES (?, ?) ON CONFLICT(capture_id) DO UPDATE SET vector = excluded.vector'
+);
+const listEmbeddings = db.prepare(
+  `SELECT c.id, c.title, c.body, c.category, c.created_at, c.source, e.vector
+   FROM captures c
+   JOIN capture_embeddings e ON e.capture_id = c.id`
+);
+
+export function saveCaptureEmbedding(captureId, vector) {
+  upsertEmbedding.run(captureId, JSON.stringify(vector));
+}
+
+export function getCapturesWithEmbeddings() {
+  return listEmbeddings.all().map((row) => ({
+    ...row,
+    vector: JSON.parse(row.vector)
+  }));
 }
