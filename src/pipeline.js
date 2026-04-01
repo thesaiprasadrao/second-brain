@@ -16,6 +16,7 @@ import { embed } from './embeddings.js';
 const DIRECT_INTENTS = new Set(['add_task', 'add_list_item', 'create_event', 'set_reminder', 'query_schedule']);
 const SKIP_ENRICH = new Set(['skip', 'no', 'nah', 'n']);
 const MERGE_WINDOW_MS = 2 * 60 * 1000;
+const GREETINGS = new Set(['hi', 'hey', 'hello', 'yo', 'sup']);
 
 function getStorage() {
   const backend = process.env.STORAGE_BACKEND ?? 'docs';
@@ -43,6 +44,11 @@ async function saveCapture(category, title, body, source = 'chat') {
 export async function pipeline(msg) {
   const text = await preprocess(msg);
   if (!text) return null;
+
+  if (isGreeting(text)) {
+    clearPending();
+    return 'Hey! How can I help?';
+  }
 
   // Check pending state first
   const pending = getPending();
@@ -166,4 +172,12 @@ function parseMessageTime(ts) {
   const normalized = ts.replace(' ', 'T');
   const parsed = Date.parse(normalized);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function isGreeting(text) {
+  const cleaned = text.trim().toLowerCase().replace(/[!?.,]+$/g, '');
+  if (!cleaned) return false;
+  const words = cleaned.split(/\s+/);
+  if (words.length > 2) return false;
+  return GREETINGS.has(words[0]) || GREETINGS.has(cleaned);
 }
