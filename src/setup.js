@@ -166,17 +166,20 @@ export async function setup() {
   const backend = await p.select({
     message: 'Where should notes be saved?',
     options: [
-      { value: 'keep', label: 'Google Keep', hint: 'one note per entry' },
+      { value: 'keep', label: 'Google Keep', hint: 'may be unavailable for some accounts' },
       { value: 'docs', label: 'Google Docs', hint: 'one doc per category, entries appended' },
     ],
   });
   if (p.isCancel(backend)) process.exit(0);
 
-  const googleClientId = await p.text({ message: 'Google OAuth Client ID' });
-  if (p.isCancel(googleClientId)) process.exit(0);
+  const googleClientId = process.env.APP_GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.APP_GOOGLE_CLIENT_SECRET;
 
-  const googleClientSecret = await p.password({ message: 'Google OAuth Client Secret' });
-  if (p.isCancel(googleClientSecret)) process.exit(0);
+  if (!googleClientId || !googleClientSecret) {
+    p.log.error('Missing APP_GOOGLE_CLIENT_ID or APP_GOOGLE_CLIENT_SECRET in .env');
+    p.log.info('Add these once for your app, then re-run setup. Users will just log in via browser.');
+    process.exit(1);
+  }
 
   const refreshToken = await googleOAuth(googleClientId, googleClientSecret, backend);
 
