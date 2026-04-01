@@ -1,6 +1,17 @@
 import { google } from 'googleapis';
 import { getDocId, saveDocId } from '../db.js';
 
+function normalizeCategory(category) {
+  return category.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function formatCategory(category) {
+  return category
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 function getAuth() {
   // Check if service account is configured
   if (process.env.GOOGLE_SERVICE_ACCOUNT_PATH) {
@@ -27,20 +38,22 @@ export async function saveCapture(category, title, body, date) {
   const docs = google.docs({ version: 'v1', auth: getAuth() });
   const drive = google.drive({ version: 'v3', auth: getAuth() });
 
-  let docId = getDocId(category);
+  const key = normalizeCategory(category);
+  const displayCategory = formatCategory(key);
+  let docId = getDocId(key);
 
   if (!docId) {
     const doc = await drive.files.create({
       requestBody: {
-        name: `Second Brain — ${category}`,
+        name: `Second Brain — ${displayCategory}`,
         mimeType: 'application/vnd.google-apps.document',
       },
     });
     docId = doc.data.id;
-    saveDocId(category, docId);
+    saveDocId(key, docId);
   }
 
-  const entry = `${title}\n${body ? body + '\n' : ''}Added: ${date}\n${'─'.repeat(40)}\n`;
+  const entry = `${title}\n${body ? body + '\n' : ''}Added: ${date}\n${'-'.repeat(40)}\n`;
 
   await docs.documents.batchUpdate({
     documentId: docId,
