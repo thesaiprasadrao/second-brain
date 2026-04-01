@@ -89,6 +89,13 @@ export async function pipeline(msg) {
 
   if (pending?.step === 'awaiting_confirm') {
     const reply = text.trim().toLowerCase();
+    const override = extractCategoryOverride(text.trim());
+    if (override) {
+      await saveCapture(override, pending.title, pending.body);
+      clearPending();
+      return `Saved — ${override}: ${pending.title} (${today()}).`;
+    }
+
     if (CONFIRM_NO.has(reply)) {
       clearPending();
       return 'Okay, not saved.';
