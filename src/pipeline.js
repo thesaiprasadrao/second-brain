@@ -9,7 +9,8 @@ import {
   clearPending,
   saveCaptureRecord,
   saveCaptureEmbedding,
-  getRecentMessages
+  getRecentMessages,
+  getCaptures
 } from './db.js';
 import { embed } from './embeddings.js';
 
@@ -56,6 +57,10 @@ export async function pipeline(msg) {
   if (isGreeting(text)) {
     clearPending();
     return 'Hey! How can I help?';
+  }
+
+  if (isSaveLocationQuestion(text)) {
+    return describeLastSave();
   }
 
   // Check pending state first
@@ -140,7 +145,19 @@ export async function pipeline(msg) {
   const mergedText = mergeWithRecent(text);
   const { history } = buildContext();
   const result = await classify(mergedText, history);
-  const { intent, entities, response, query } = result;
+  let { intent, entities, response, query } = result;
+
+  if (intent === 'converse' && isLikelyCapture(text)) {
+    intent = 'capture';
+  }
+
+  if (intent === 'add_list_item') {
+    const title = entities?.title?.trim();
+    const listName = entities?.list_name?.trim();
+    if (!title || !listName || ['it', 'this', 'that'].includes(title.toLowerCase())) {
+      intent = 'capture';
+    }
+  }
 
   if (text.trim().endsWith('?') && intent === 'capture') {
     return response ?? null;
@@ -210,6 +227,31 @@ function parseMessageTime(ts) {
   const normalized = ts.replace(' ', 'T');
   const parsed = Date.parse(normalized);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function isLikelyCapture(text) {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.endsWith('?')) return false;
+  if (isGreeting(trimmed)) return false;
+
+  const words = trimmed.split(/\s+/);
+  if (words.length <= 4) return true;
+  if (/https?:\/\//i.test(trimmed)) return true;
+  if (/[a-z0-9]\.[a-z]{2,}/i.test(trimmed) && words.length <= 6) return true;
+  return false;
+}
+
+function isSaveLocationQuestion(text) {
+  const lower = text.trim().toLowerCase();
+  return /(where|which).*(save|saved|saving|store|stored)/.test(lower);
+}
+
+function describeLastSave() {
+  const backend = (process.env.STORAGE_BACKEND ?? 'docs').toLowerCase();
+  const location = backend === 'keep' ? 'Google Keep' : 'Google Docs';
+  const last = getCaptures(1)?.[0];
+  if (!last) return `I save to ${location}. Nothing saved yet.`;
+  return `I save to ${location}. Latest: ${last.category} — ${last.title}.`;
 }
 
 function extractCategoryOverride(text) {
