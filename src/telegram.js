@@ -1,4 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
+import readline from 'readline';
 import { pipeline } from './pipeline.js';
 import { saveMessage } from './db.js';
 import { log } from './logger.js';
@@ -18,6 +19,7 @@ export function startTelegram() {
 
   const allowChatId = process.env.TELEGRAM_CHAT_ID;
   const bot = new TelegramBot(token, { polling: true });
+  startTelegramTUI(bot, allowChatId);
 
   bot.on('message', async (msg) => {
     const chatId = msg.chat?.id?.toString();
@@ -38,6 +40,7 @@ export function startTelegram() {
 
     saveMessage('user', text);
     log.info(`Telegram in: ${text}`);
+    console.log(`\n→ ${text}\n> `);
 
     try {
       const reply = await pipeline({ message: { conversation: text } });
@@ -46,6 +49,7 @@ export function startTelegram() {
       await bot.sendMessage(chatId, reply);
       saveMessage('assistant', reply);
       log.info(`Telegram out: ${reply}`);
+      console.log(`\n← ${reply}\n> `);
     } catch (err) {
       log.error(`Telegram pipeline: ${err.message}`);
       try {
@@ -57,4 +61,26 @@ export function startTelegram() {
   });
 
   return bot;
+}
+
+function startTelegramTUI(bot, chatId) {
+  if (!chatId) return;
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  console.log('\nTelegram bridge active. Type a message and press Enter.\n');
+
+  const prompt = () => rl.question('> ', async (input) => {
+    const text = input.trim();
+    if (!text) return prompt();
+
+    try {
+      await bot.sendMessage(chatId, text);
+      log.info(`Telegram TUI out: ${text}`);
+    } catch (err) {
+      log.error(`Telegram TUI send failed: ${err.message}`);
+    }
+    prompt();
+  });
+
+  prompt();
 }
