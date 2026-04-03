@@ -1,19 +1,28 @@
 # ⚡ Quick Start (5 minutes)
 
-## 1. Download
+## 1. Install
 
+### Option A: One-liner (Recommended)
 ```bash
-git clone https://github.com/anomalyco/second-brain.git
+curl -fsSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash
+```
+
+### Option B: Manual
+```bash
+git clone https://github.com/thesaiprasadrao/second-brain.git
 cd second-brain
 npm install
 ```
 
-**Or** download ZIP from GitHub and extract
+### Option C: Global npm
+```bash
+npm install -g second-brain
+```
 
 ## 2. Setup
 
 ```bash
-npm run setup
+2nd-brain setup
 ```
 
 Fill in:
@@ -24,7 +33,13 @@ Fill in:
 ## 3. Start
 
 ```bash
-npm start
+2nd-brain start
+```
+
+Server runs in background! To check status:
+```bash
+2nd-brain status
+2nd-brain logs
 ```
 
 ## 4. Try It!
@@ -48,27 +63,26 @@ Done! 🎉
 
 ---
 
+### Available Commands
+
+```bash
+2nd-brain setup           # Configure (API keys, etc)
+2nd-brain start           # Start server (daemon)
+2nd-brain stop            # Stop server
+2nd-brain restart         # Restart server
+2nd-brain status          # Check server status
+2nd-brain logs [N]        # View logs (last N lines)
+2nd-brain send <message>  # Send quick message
+2nd-brain help            # Show help
+```
+
+---
+
 ### Next Steps
 
 - 📖 Read [README.md](README.md) for full features
 - 🛠 Check [INSTALL.md](INSTALL.md) for other deployment options
-- 🐛 Report issues on [GitHub](https://github.com/anomalyco/second-brain/issues)
-
----
-
-### Keyboard Shortcuts (in terminal mode)
-
-- `Ctrl+C` - Exit
-- `Ctrl+D` - Quit
-
-### Common Commands
-
-```bash
-npm start          # Run with dashboard
-npm run send "msg" # Send quick message
-npm run setup      # Reconfigure
-npm run logs       # View logs
-```
+- 🐛 Report issues on [GitHub](https://github.com/thesaiprasadrao/second-brain/issues)
 
 ---
 

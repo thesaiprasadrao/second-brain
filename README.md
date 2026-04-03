@@ -22,21 +22,29 @@ Your personal AI second brain that captures ideas, tasks, and memories. Self-hos
 - **Groq API Key** ([free here](https://console.groq.com))
 - **Google Account** (for saving docs/tasks/calendar)
 
-### 1️⃣ Installation
+### 1️⃣ Installation (Choose One)
 
+**🚀 One-liner (Recommended):**
 ```bash
-# Clone or download
-git clone https://github.com/anomalyco/second-brain.git
-cd second-brain
+curl -fsSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash
+```
 
-# Install dependencies
+**Or via npm:**
+```bash
+npm install -g second-brain
+```
+
+**Or manually:**
+```bash
+git clone https://github.com/thesaiprasadrao/second-brain.git
+cd second-brain
 npm install
 ```
 
 ### 2️⃣ Setup (2 minutes)
 
 ```bash
-npm run setup
+2nd-brain setup
 ```
 
 You'll be guided through:
@@ -48,10 +56,17 @@ You'll be guided through:
 ### 3️⃣ Start Using
 
 ```bash
-npm start
+2nd-brain start
 ```
 
-The dashboard opens. Choose "Start Second Brain" or just start typing in the terminal.
+Server runs as daemon! Check status anytime:
+```bash
+2nd-brain status
+2nd-brain logs
+2nd-brain stop
+```
+
+The app is now running in the background. Use your Telegram bot to start capturing!
 
 ---
 
