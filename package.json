@@ -1,11 +1,11 @@
 {
-  "name": "second-brain",
+  "name": "2nd-brain",
   "version": "0.1.0",
   "description": "🧠 Your personal AI second brain — self-hosted, end-to-end encrypted, zero data sharing",
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "second-brain": "./bin/cli.js"
+    "2nd-brain": "./bin/cli.js"
   },
   "scripts": {
     "start": "node bin/cli.js start",
