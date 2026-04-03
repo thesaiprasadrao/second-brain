@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Second Brain — Personal AI Assistant | Self-Hosted</title>
+  <title>Second Brain — Your Retro-Future Assistant</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,900&f[]=satoshi@400,700&display=swap" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
@@ -15,8 +16,6 @@
       --mustard: #FFB300;
       --teal: #006D77;
       --charcoal: #2D2D2D;
-      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-      --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     }
 
     body {
@@ -32,16 +31,16 @@
       letter-spacing: -0.03em;
     }
 
-    .mono { font-family: 'Space Mono', monospace; }
+    .mono {
+      font-family: 'Space Mono', monospace;
+    }
 
-    .retro-border { border: 3px solid var(--charcoal); }
+    .retro-border {
+      border: 3px solid var(--charcoal);
+    }
 
     .retro-shadow {
       box-shadow: 6px 6px 0px 0px var(--charcoal);
-    }
-
-    .retro-shadow-hover {
-      transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
     }
 
     .retro-shadow-hover:hover {
@@ -66,468 +65,46 @@
       background-size: 32px 32px;
       opacity: 0.05;
     }
-
-    .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      border: 3px solid var(--charcoal);
-      background: white;
-      color: var(--charcoal);
-      font-weight: bold;
-      text-decoration: none;
-      cursor: pointer;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-      transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
-      box-shadow: 4px 4px 0px var(--charcoal);
-    }
-
-    .btn:hover {
-      box-shadow: 2px 2px 0px var(--charcoal);
-      transform: translate(2px, 2px);
-    }
-
-    .btn:active {
-      transform: translate(4px, 4px) scale(0.97);
-    }
-
-    .btn-primary {
-      background: var(--coral);
-      color: white;
-    }
-
-    .btn-secondary {
-      background: var(--teal);
-      color: white;
-    }
-
-    .code-block {
-      background: #1a1a1a;
-      color: #e0e0e0;
-      padding: 16px;
-      border-radius: 4px;
-      overflow-x: auto;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      border: 2px solid var(--charcoal);
-    }
-
-    .feature-card {
-      background: white;
-      padding: 24px;
-      border: 3px solid var(--charcoal);
-      transition: all 200ms var(--ease-out);
-    }
-
-    .feature-card:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: 8px 8px 0px var(--charcoal);
-    }
-
-    .section {
-      padding: 60px 20px;
-    }
-
-    @media (max-width: 768px) {
-      h1 { font-size: 3.5rem !important; }
-      .section { padding: 40px 20px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0s !important;
-        transition-duration: 0s !important;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="grain"></div>
-
-  <!-- Navigation -->
-  <nav class="sticky top-0 z-50 bg-white border-b-4 border-black">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-black">🧠 SECOND BRAIN</h1>
-      <a href="#get-started" class="btn btn-primary">Get Started</a>
-    </div>
-  </nav>
-
-  <!-- Hero -->
-  <header class="relative pt-20 pb-40 px-6 overflow-hidden section">
+  
+  <div class="min-h-screen relative">
     <div class="absolute inset-0 grid-bg pointer-events-none"></div>
 
-    <div class="max-w-6xl mx-auto text-center relative z-10">
-      <div class="inline-block border-3 border-black bg-white px-4 py-2 font-bold uppercase text-xs mb-8 retro-shadow">
-        v1.0 — Production Ready
+    <header class="relative pt-24 pb-32 px-6 overflow-hidden">
+      <div class="absolute top-20 left-10 opacity-20 animate-pulse">
+        <iconify-icon icon="lucide:sparkles" class="text-8xl text-[#FFB300]"></iconify-icon>
+      </div>
+      <div class="absolute bottom-20 right-10 opacity-20 rotate-12">
+        <iconify-icon icon="lucide:circle-dot" class="text-9xl text-[#006D77]"></iconify-icon>
       </div>
 
-      <h1 class="text-7xl md:text-8xl lg:text-9xl font-black leading-tight mb-8 italic">
-        YOUR <span class="text-coral">BRAIN</span>,<br>
-        BUT <span class="text-teal">DISTRIBUTED.</span>
-      </h1>
-
-      <p class="max-w-3xl mx-auto text-lg md:text-xl font-medium leading-relaxed mb-12 text-gray-700">
-        Capture ideas via Telegram or WhatsApp. Your personal AI organizes everything — tasks, reminders, memories — all self-hosted on your machine. Nothing leaves your device.
-      </p>
-
-      <div class="flex flex-wrap justify-center gap-4 mb-16">
-        <a href="#installation" class="btn btn-primary">Install Now</a>
-        <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank" class="btn btn-secondary">View on GitHub</a>
-      </div>
-
-      <!-- Quick Features -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16">
-        <div class="feature-card">
-          <div class="text-3xl mb-3">⚡</div>
-          <h3 class="font-bold mb-2">Instant Capture</h3>
-          <p class="text-sm text-gray-600">Text your brain, it auto-organizes</p>
+      <div class="max-w-6xl mx-auto text-center relative z-10">
+        <div class="inline-block border-2 border-black bg-white px-4 py-1 font-bold uppercase tracking-widest text-xs mb-8 transform -rotate-2 retro-shadow">
+          v1.0.0 — Stable Release
         </div>
-        <div class="feature-card">
-          <div class="text-3xl mb-3">🔐</div>
-          <h3 class="font-bold mb-2">100% Private</h3>
-          <p class="text-sm text-gray-600">Self-hosted, nothing in the cloud</p>
-        </div>
-        <div class="feature-card">
-          <div class="text-3xl mb-3">🤖</div>
-          <h3 class="font-bold mb-2">AI-Powered</h3>
-          <p class="text-sm text-gray-600">Smart intent routing & recall</p>
+
+        <h1 class="text-6xl md:text-8xl lg:text-[10rem] font-black leading-[0.85] mb-12 italic">
+          YOUR <span class="text-[#FF6B6B]">BRAIN</span>,<br>
+          BUT ON <span class="text-[#006D77]">TECH.</span>
+        </h1>
+
+        <p class="max-w-2xl mx-auto text-xl md:text-2xl font-medium leading-relaxed mb-12 text-[#444]">
+          A self-hosted WhatsApp and Telegram AI assistant that captures your chaos and routes it to your digital universe. Text yourself, let the machine organize.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-6">
+          <a href="#get-started" class="px-6 py-3 bg-[#FF6B6B] text-white font-bold uppercase border-2 border-black retro-shadow transform hover:-translate-y-1">
+            Get Started
+          </a>
+          <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank" class="px-6 py-3 bg-[#006D77] text-white font-bold uppercase border-2 border-black retro-shadow transform hover:-translate-y-1">
+            View GitHub
+          </a>
         </div>
       </div>
-    </div>
-  </header>
-
-  <!-- What It Does -->
-  <section class="section bg-white border-t-4 border-black">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">How It Works</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div class="space-y-6">
-          <h3 class="text-2xl font-bold">Capture in Natural Language</h3>
-          <p class="text-gray-700 leading-relaxed">
-            Send a message to your Telegram bot or WhatsApp. Your brain understands intent:
-          </p>
-          <ul class="space-y-3">
-            <li class="flex items-start gap-3">
-              <span class="text-coral font-bold">💡</span>
-              <span>"cool article about react" → Auto-saved as a capture</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <span class="text-mustard font-bold">✅</span>
-              <span>"remind me to call mom at 5pm" → Creates a reminder</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <span class="text-teal font-bold">📝</span>
-              <span>"add milk to shopping list" → Manages your lists</span>
-            </li>
-            <li class="flex items-start gap-3">
-              <span class="text-coral font-bold">🔎</span>
-              <span>"what did I save about next.js?" → Semantic search recall</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="bg-black text-white p-8 retro-border">
-          <h4 class="text-sm font-bold uppercase mb-4 opacity-70">Example Conversation</h4>
-          <div class="space-y-4 text-sm mono">
-            <div><span class="text-mustard">You:</span> check this https://nextjs.org</div>
-            <div><span class="text-teal">Brain:</span> Save as "Web Frameworks: Next.js"?</div>
-            <div><span class="text-mustard">You:</span> yes</div>
-            <div><span class="text-teal">Brain:</span> ✓ Saved to Google Docs</div>
-            <div class="mt-4 border-t border-gray-600 pt-4"></div>
-            <div><span class="text-mustard">You:</span> what about react?</div>
-            <div><span class="text-teal">Brain:</span> You saved Next.js framework...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Installation -->
-  <section id="installation" class="section">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">Installation</h2>
-
-      <div class="space-y-8">
-        <div class="space-y-4">
-          <h3 class="text-2xl font-bold">Option 1: One-liner (Recommended)</h3>
-          <div class="code-block">
-curl -fsSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash
-          </div>
-          <p class="text-gray-700">Checks Node.js, clones repo, installs deps, creates global command</p>
-        </div>
-
-        <div class="space-y-4">
-          <h3 class="text-2xl font-bold">Option 2: Global npm</h3>
-          <div class="code-block">
-npm install -g second-brain
-          </div>
-        </div>
-
-        <div class="space-y-4">
-          <h3 class="text-2xl font-bold">Option 3: Manual</h3>
-          <div class="code-block">
-git clone https://github.com/thesaiprasadrao/second-brain.git
-cd second-brain && npm install
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Commands -->
-  <section class="section bg-white border-t-4 border-black border-b-4">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">Global Commands</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain setup</h4>
-          <p class="text-sm text-gray-600">Interactive configuration (API keys, Telegram/WhatsApp)</p>
-        </div>
-
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain start</h4>
-          <p class="text-sm text-gray-600">Start daemon (runs in background until you stop it)</p>
-        </div>
-
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain status</h4>
-          <p class="text-sm text-gray-600">Check server status, uptime, memory usage</p>
-        </div>
-
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain logs [N]</h4>
-          <p class="text-sm text-gray-600">View last N lines of server logs</p>
-        </div>
-
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain send "msg"</h4>
-          <p class="text-sm text-gray-600">Send quick message from CLI</p>
-        </div>
-
-        <div class="feature-card retro-shadow-hover">
-          <h4 class="text-lg font-bold mb-2">2nd-brain stop / restart</h4>
-          <p class="text-sm text-gray-600">Stop or restart the daemon</p>
-        </div>
-      </div>
-
-      <div class="mt-12 bg-black text-white p-8 retro-border">
-        <h3 class="font-bold mb-4 text-lg">Quick Start Workflow</h3>
-        <div class="code-block bg-gray-900">
-# 1. Setup (interactive)
-2nd-brain setup
-
-# 2. Start daemon (runs forever)
-2nd-brain start
-
-# 3. Check status
-2nd-brain status
-
-# 4. Use Telegram to send messages
-# Server keeps running in background
-
-# 5. Stop when done
-2nd-brain stop
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Deployment -->
-  <section class="section">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">Deployment Options</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="feature-card">
-          <h3 class="text-lg font-bold mb-2">💻 Local Machine</h3>
-          <p class="text-gray-700 mb-4">Run on your laptop, stays active as daemon</p>
-          <code class="text-sm mono text-coral">2nd-brain start</code>
-        </div>
-
-        <div class="feature-card">
-          <h3 class="text-lg font-bold mb-2">🐳 Docker</h3>
-          <p class="text-gray-700 mb-4">Containerized, one command deploy</p>
-          <code class="text-sm mono text-coral">docker-compose up</code>
-        </div>
-
-        <div class="feature-card">
-          <h3 class="text-lg font-bold mb-2">☁️ Cloud VPS</h3>
-          <p class="text-gray-700 mb-4">$5-10/mo on DigitalOcean, Linode, AWS</p>
-          <code class="text-sm mono text-coral">Always-on 24/7</code>
-        </div>
-
-        <div class="feature-card">
-          <h3 class="text-lg font-bold mb-2">🥧 Raspberry Pi</h3>
-          <p class="text-gray-700 mb-4">Home server, $35 hardware</p>
-          <code class="text-sm mono text-coral">SSH + 2nd-brain start</code>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <section class="section bg-white border-t-4 border-black border-b-4">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">Features</h2>
-
-      <div class="space-y-6">
-        <div class="flex gap-4">
-          <div class="text-3xl">📸</div>
-          <div>
-            <h3 class="font-bold text-lg">Natural Language Capture</h3>
-            <p class="text-gray-700">Ideas, links, notes, tasks — just text naturally</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">🔍</div>
-          <div>
-            <h3 class="font-bold text-lg">Semantic Search & Recall</h3>
-            <p class="text-gray-700">"What did I save about React?" finds related captures instantly</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">🚀</div>
-          <div>
-            <h3 class="font-bold text-lg">Intent Routing</h3>
-            <p class="text-gray-700">AI understands: capture, task, reminder, event, list item, conversation</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">💬</div>
-          <div>
-            <h3 class="font-bold text-lg">Telegram & WhatsApp</h3>
-            <p class="text-gray-700">Use your preferred messaging app, bidirectional sync</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">🏠</div>
-          <div>
-            <h3 class="font-bold text-lg">100% Self-Hosted</h3>
-            <p class="text-gray-700">Everything runs on your machine, nothing in the cloud</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">🔐</div>
-          <div>
-            <h3 class="font-bold text-lg">Privacy-First</h3>
-            <p class="text-gray-700">No tracking, no analytics, no data sharing. You own everything.</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">📊</div>
-          <div>
-            <h3 class="font-bold text-lg">Dashboard TUI</h3>
-            <p class="text-gray-700">Beautiful terminal UI for stats, exports, settings</p>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="text-3xl">💾</div>
-          <div>
-            <h3 class="font-bold text-lg">Google Integration</h3>
-            <p class="text-gray-700">Save to Google Docs, Keep, Calendar, Tasks</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Storage -->
-  <section class="section">
-    <div class="max-w-6xl mx-auto">
-      <h2 class="text-5xl md:text-6xl font-black mb-12">Storage Backend</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="feature-card">
-          <h3 class="text-2xl font-bold mb-4">Google Docs (Recommended)</h3>
-          <ul class="space-y-2 text-gray-700">
-            <li>✓ One document per category</li>
-            <li>✓ Entries appended chronologically</li>
-            <li>✓ Easy to share later</li>
-            <li>✓ Full formatting support</li>
-          </ul>
-        </div>
-
-        <div class="feature-card">
-          <h3 class="text-2xl font-bold mb-4">Google Keep</h3>
-          <ul class="space-y-2 text-gray-700">
-            <li>✓ Quick personal notes</li>
-            <li>✓ Simpler setup</li>
-            <li>✓ Mobile accessible</li>
-            <li>✓ Lightweight</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section id="get-started" class="section bg-black text-white border-t-4 border-white">
-    <div class="max-w-6xl mx-auto text-center">
-      <h2 class="text-5xl md:text-6xl font-black mb-8">Ready to Build Your Brain?</h2>
-      <p class="text-lg mb-12 opacity-90">Install in 2 minutes, start capturing in seconds.</p>
-
-      <div class="flex flex-wrap justify-center gap-4">
-        <button class="btn" style="background: white; color: black;">
-          <a href="#installation" style="display: inline;">Install Now</a>
-        </button>
-        <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank" class="btn" style="background: var(--coral);">
-          View GitHub
-        </a>
-      </div>
-
-      <p class="text-sm mt-12 opacity-75">
-        MIT License • Self-hosted • Privacy-first • Open source
-      </p>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="border-t-4 border-black bg-white py-12">
-    <div class="max-w-6xl mx-auto px-6 text-center text-gray-700">
-      <p class="mb-4">Made with ❤️ for people who think a lot</p>
-      <div class="flex justify-center gap-6 text-sm">
-        <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank" class="hover:text-black transition-colors">GitHub</a>
-        <a href="https://github.com/thesaiprasadrao/second-brain/issues" target="_blank" class="hover:text-black transition-colors">Report Issue</a>
-        <a href="#" class="hover:text-black transition-colors">Docs (in README)</a>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth' });
-        }
-      });
-    });
-
-    // Copy code blocks on click
-    document.querySelectorAll('.code-block').forEach(block => {
-      block.style.cursor = 'pointer';
-      block.addEventListener('click', function() {
-        const text = this.innerText;
-        navigator.clipboard.writeText(text);
-        const original = this.innerText;
-        this.innerText = '✓ Copied!';
-        setTimeout(() => {
-          this.innerText = original;
-        }, 2000);
-      });
-    });
-  </script>
+    </header>
+  </div>
 </body>
 </html>
