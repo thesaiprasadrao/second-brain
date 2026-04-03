@@ -40,15 +40,45 @@ function startTUI(sock, selfJid) {
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   console.log('\nSecond Brain is running. Type a message and press Enter (Ctrl+C to exit).\n');
+  console.log('Use /send <message> to send to WhatsApp. Default is local TUI processing.\n');
 
   const prompt = () => rl.question('> ', async (input) => {
     const text = input.trim();
     if (!text) return prompt();
-    await sock.sendMessage(selfJid, { text });
+
+    if (text.startsWith('/send ')) {
+      const message = text.slice(6).trim();
+      if (!message) return prompt();
+      await sock.sendMessage(selfJid, { text: message });
+      return prompt();
+    }
+
+    await handleLocalMessage(text, sock, selfJid);
     prompt();
   });
 
   prompt();
+}
+
+async function handleLocalMessage(text, sock, selfJid) {
+  saveMessage('user', text);
+  log.info(`TUI in: ${text}`);
+
+  try {
+    const reply = await pipeline({ message: { conversation: text } });
+    if (reply) {
+      saveMessage('assistant', reply);
+      log.info(`TUI out: ${reply}`);
+      console.log(`\n← ${reply}\n> `);
+    }
+  } catch (err) {
+    log.error(`TUI pipeline: ${err.message}`);
+    try {
+      await sock.sendMessage(selfJid, { text: 'Something went wrong. Try again.' });
+    } catch (sendErr) {
+      log.error(`TUI error send failed: ${sendErr.message}`);
+    }
+  }
 }
 
 async function connect() {
