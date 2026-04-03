@@ -1,6 +1,6 @@
 # 🧠 Second Brain
 
-Your personal AI second brain that captures ideas, tasks, and memories. Self-hosted, end-to-end encrypted, zero data sharing.
+Your personal AI second brain that captures ideas, tasks, and memories. **Self-hosted, end-to-end encrypted, zero data sharing.**
 
 ## ✨ Features
 
@@ -13,173 +13,166 @@ Your personal AI second brain that captures ideas, tasks, and memories. Self-hos
 - 🔐 **Private**: No cloud, no tracking, no data sharing
 - 📊 **Dashboard**: Beautiful TUI to manage everything
 
-## 🚀 Quick Start
+---
+
+## 🚀 Quick Start (5 minutes)
 
 ### Prerequisites
 
 - **Node.js 20+** ([download](https://nodejs.org))
-- **Telegram Bot** (optional, or use WhatsApp)
-- **Groq API Key** ([free here](https://console.groq.com))
+- **Telegram Bot** (get from @BotFather) or use WhatsApp
+- **Groq API Key** ([free tier](https://console.groq.com))
 - **Google Account** (for saving docs/tasks/calendar)
 
-### 1️⃣ Installation (Choose One)
+### Installation
 
-**🚀 One-liner (Recommended):**
+**Option 1: One-liner (Recommended)**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash
 ```
 
-**Or via npm:**
+**Option 2: Global npm**
 ```bash
 npm install -g second-brain
 ```
 
-**Or manually:**
+**Option 3: Manual**
 ```bash
 git clone https://github.com/thesaiprasadrao/second-brain.git
-cd second-brain
-npm install
+cd second-brain && npm install
 ```
 
-### 2️⃣ Setup (2 minutes)
+### Setup & Run
 
 ```bash
+# 1. Configure (interactive wizard)
 2nd-brain setup
-```
 
-You'll be guided through:
-- Choose Telegram or WhatsApp
-- Enter your Groq API key
-- Choose where to save notes (Google Docs or Keep)
-- Grant Google permissions
-
-### 3️⃣ Start Using
-
-```bash
+# 2. Start the daemon (runs in background)
 2nd-brain start
-```
 
-Server runs as daemon! Check status anytime:
-```bash
+# 3. Check status anytime
 2nd-brain status
-2nd-brain logs
-2nd-brain stop
 ```
 
-The app is now running in the background. Use your Telegram bot to start capturing!
+Now use **Telegram** to send messages to your brain!
 
 ---
 
-## 📖 Usage
+## 🎯 Commands
 
-### Quick Commands
+```bash
+2nd-brain setup              # Interactive configuration
+2nd-brain start              # Start server (daemon mode)
+2nd-brain stop               # Stop the daemon
+2nd-brain restart            # Restart server
+2nd-brain status             # Show server status
+2nd-brain logs [N]           # View logs (last N lines)
+2nd-brain send <message>     # Send quick message
+2nd-brain help               # Show help
+```
+
+**Or use npm:**
+```bash
+npm start              npm stop              npm restart
+npm run setup          npm run status        npm run logs
+npm run send "msg"
+```
+
+---
+
+## 📖 Usage Examples
 
 ```
-💡 CAPTURE IDEAS:
+💡 CAPTURE:
 "check this: https://nextjs.org"
-"cool library for building state machines"
+"cool idea for building state machines"
 
-✅ CREATE TASKS:
-"todo: finish quarterly report by friday"
-"remind me to call mom at 3pm"
+✅ TASKS:
+"todo: finish report by friday"
+"remind me to code at 5pm"
 
-📝 ADD TO LISTS:
+📝 LISTS:
 "add coffee to shopping list"
 
-🔎 RECALL MEMORIES:
+🔎 RECALL:
 "what did I save about react?"
-"show me my web development notes"
+"show my web development notes"
 
-💬 JUST CHAT:
+💬 CHAT:
 "tell me a joke"
 "how is the weather?"
-```
-
-### Advanced Features
-
-**Category Override During Confirmation:**
-```
-You: "cool website: https://example.com"
-Bot: "Save as 'Web Development: Example'?"
-You: "add to frontend tools"
-Bot: "Saved to 'frontend tools'"
-```
-
-**Short Message Stitching:**
-Send rapid-fire messages, they auto-merge:
-```
-You: "next.js"
-You: "it's awesome"
-→ Captured as "next.js it's awesome"
-```
-
----
-
-## 🛠 Commands
-
-```bash
-npm start              # Start dashboard & server
-npm run dev            # Run server directly (skip dashboard)
-npm run setup          # Reconfigure settings
-npm run send "msg"     # Send a quick message
-npm run logs           # View live logs
-npm run clean          # Reset database & config
 ```
 
 ---
 
 ## 🔧 Configuration
 
-Edit `.env` file to customize:
+After running `2nd-brain setup`, edit `.env` to customize:
 
 ```env
-# Channel: telegram or whatsapp
-CHANNEL=telegram
-
-# Storage backend: docs or keep
-STORAGE_BACKEND=docs
-
-# Briefing time (HH:MM format)
-BRIEFING_TIME=08:00
-
-# API Keys
-GROQ_API_KEY=gsk_...
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_CHAT_ID=...
+GROQ_API_KEY=gsk_...              # Groq LLM API
+TELEGRAM_BOT_TOKEN=...            # Telegram bot token
+TELEGRAM_CHAT_ID=...              # Your Telegram chat ID
+STORAGE_BACKEND=docs              # docs or keep (Google storage)
+BRIEFING_TIME=08:00               # Daily briefing time
 ```
+
+**Get API Keys:**
+- **Groq**: https://console.groq.com
+- **Telegram**: Message @BotFather, create bot
+- **Google**: Auto-configured during setup
 
 ---
 
 ## 📊 Dashboard Features
 
-- **Quick Stats**: Total captures, today's count, message history
+- **Stats**: Total captures, today's count, message history
 - **Recent Captures**: Last 5 notes at a glance
-- **System Status**: Check configuration and database health
-- **Export Data**: Download captures as JSON, CSV, or Markdown
+- **System Status**: Configuration and database health
+- **Export Data**: Download as JSON, CSV, or Markdown
 - **Settings**: Reconfigure or reset database
-- **Help**: Built-in documentation
+
+---
+
+## 🛠 Deployment Options
+
+### Local Machine
+```bash
+2nd-brain start          # Runs in background
+# Server stays running until you stop it
+```
+
+### Docker
+```bash
+docker-compose up --build
+```
+
+### Cloud VPS ($5/month)
+- DigitalOcean, Linode, AWS, Hetzner, Vultr
+- SSH in, install Node.js, run `2nd-brain setup && 2nd-brain start`
+- Server keeps running with PM2
+
+### Raspberry Pi
+```bash
+# SSH into Pi, then
+2nd-brain setup && 2nd-brain start
+```
 
 ---
 
 ## 🔐 Privacy & Security
 
-✅ **Zero Cloud**
-- Everything runs on your machine
-- No data ever leaves your device
-
-✅ **Encrypted**
-- Telegram messages are end-to-end encrypted
-- WhatsApp messages are encrypted by default
-
-✅ **No Tracking**
-- No analytics, no telemetry, no ads
-- You own your data completely
+✅ **Zero Cloud** — Everything runs on your machine  
+✅ **Encrypted** — Telegram/WhatsApp are end-to-end encrypted by default  
+✅ **No Tracking** — No analytics, telemetry, or ads  
+✅ **You Own Your Data** — Export anytime as JSON, CSV, or Markdown
 
 ---
 
 ## 🧠 How It Works
 
-1. **Message arrives** via Telegram/WhatsApp or terminal
+1. **Message arrives** via Telegram/WhatsApp or CLI
 2. **LLM analyzes** intent (capture, task, conversation, etc.)
 3. **Smart routing** handles each type differently
 4. **Semantic search** finds related past captures
@@ -190,119 +183,86 @@ TELEGRAM_CHAT_ID=...
 
 ## 📚 Storage Options
 
+| | **Google Docs** | **Google Keep** |
+|--|---|---|
+| **Recommended** | ✓ Yes | Optional |
+| **Organization** | One doc per category | Quick notes |
+| **Format** | Rich text, URLs | Simple notes |
+
+---
+
+## 🔧 Storage Backends
+
 ### Google Docs (Recommended)
 - One document per category
 - Entries appended chronologically
 - Easy to share/export later
 
 ### Google Keep
-- Quick notes in Keep
+- Quick notes in Keep app
 - Better for personal use
-- Note: May not work for all accounts
+- Simpler setup
 
 ---
 
 ## 🐛 Troubleshooting
 
-### "Setup wizard crashes"
-```bash
-# Start over
-npm run clean
-npm run setup
-```
-
-### "Messages not appearing in Telegram"
-1. Check `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env`
-2. Make sure bot has message permission
-3. Restart with `npm start`
-
-### "Groq API errors"
-1. Verify your API key at https://console.groq.com
-2. Check rate limits (free tier: 30 requests/minute)
-3. Check internet connection
-
-### "Google Docs not being created"
-1. Re-run `npm run setup` to refresh Google permissions
-2. Check if your Google account allows API access
-3. Verify drive isn't full
-
-### Database corruption
-```bash
-# Reset database (clears all data!)
-npm run clean
-npm start
-```
+| Problem | Solution |
+|---------|----------|
+| **Setup crashes** | `2nd-brain stop && rm .env && 2nd-brain setup` |
+| **No Telegram messages** | Verify `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` |
+| **Groq API errors** | Check rate limits (free tier: 30 req/min) or verify API key |
+| **Google Docs not created** | Re-run `2nd-brain setup` to refresh permissions |
+| **Database corrupted** | `2nd-brain stop && rm memory.db* && 2nd-brain start` |
 
 ---
 
-## 🌐 API Docs
+## ❓ FAQ
 
-### Groq
-- Free LLM API with great performance
-- https://console.groq.com
+**Q: Is my data really private?**  
+A: Yes! Everything stays on your machine. Open source — check the code yourself.
 
-### Telegram
-- Create bot: https://t.me/botfather
-- Send `/start` to get chat ID
+**Q: Can I run this on my phone?**  
+A: Not directly, but run on Raspberry Pi or cloud server and access via Telegram.
 
-### Google APIs
-- Enable Drive, Docs, Tasks, Calendar APIs
-- Create OAuth credentials
+**Q: What if I lose my laptop?**  
+A: Captures are in Google Docs/Keep. Export regularly as backup.
+
+**Q: Can I share captures with others?**  
+A: Yes! Export to Google Docs and share the link.
+
+**Q: Does it work offline?**  
+A: LLM processing needs internet. Messages queue when offline.
 
 ---
 
-## 📦 Deployment Options
+## 📦 Requirements
 
-### Docker (Coming Soon)
-```bash
-docker run -it second-brain npm start
-```
+- Node.js 20+
+- Internet connection (for LLM and APIs)
+- Optional: Docker, Telegram account, Google account
 
-### Cloud VPS
-1. Rent small VPS (e.g., Linode $5/month)
-2. Install Node.js
-3. Clone repo and run `npm start`
-4. Keep running with PM2
+---
 
-### Raspberry Pi
-Works great on Pi 4 (2GB RAM+)
-```bash
-# SSH into Pi, then
-npm start
-```
+## 🌐 API References
+
+- **Groq LLM**: https://console.groq.com (free API)
+- **Telegram Bot**: https://t.me/botfather
+- **Google APIs**: Drive, Docs, Tasks, Calendar (auto-setup)
 
 ---
 
 ## 🤝 Contributing
 
 Found a bug? Have an idea?
-- Open issue: https://github.com/anomalyco/second-brain/issues
-- Submit PR: https://github.com/anomalyco/second-brain/pulls
+- **Issues**: https://github.com/thesaiprasadrao/second-brain/issues
+- **PRs**: https://github.com/thesaiprasadrao/second-brain/pulls
 
 ---
 
 ## 📜 License
 
-MIT - Use however you want!
-
----
-
-## ❓ FAQ
-
-**Q: Is my data really private?**
-A: Yes! Everything stays on your machine. Check the code yourself.
-
-**Q: Can I run this on my phone?**
-A: Not directly, but you can run on a Raspberry Pi or cloud server and access via Telegram.
-
-**Q: What if I lose my laptop?**
-A: Your captures are in Google Docs/Keep. Export regularly as backup.
-
-**Q: Can I share captures with others?**
-A: Yes! Export to Google Docs and share the link.
-
-**Q: Does it work offline?**
-A: LLM processing needs internet. Telegram/WhatsApp messages queue when offline.
+MIT — Use however you want!
 
 ---
 
@@ -313,7 +273,5 @@ Love Second Brain? Consider:
 - 📢 Share with friends
 - 🐛 Report bugs
 - 💡 Suggest features
-
----
 
 **Made with ❤️ for people who think a lot**
