@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/i
 
 **Option 2: Global npm**
 ```bash
-npm install -g 2nd-brain
+npm install -g @saiprasadrao/2nd-brain
 ```
 
 **Option 3: Manual**
