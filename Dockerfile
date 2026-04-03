@@ -9,9 +9,9 @@ RUN npm ci --only=production
 # Copy app
 COPY . .
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+    # Use node user (already exists in node:20-slim)
+    RUN chown -R node:node /app
+    USER node
 
 # Volume for persistent data
 VOLUME ["/app/.env", "/app/memory.db", "/app/auth"]
