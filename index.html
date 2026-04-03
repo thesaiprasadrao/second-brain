@@ -15,6 +15,7 @@
             --mustard: #FFB300;
             --teal: #006D77;
             --charcoal: #2D2D2D;
+            /* Emil-approved custom curves */
             --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
             --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
         }
@@ -38,22 +39,27 @@
         }
         .retro-shadow {
             box-shadow: 8px 8px 0px 0px var(--charcoal);
+            /* Specify exact properties — not "all" */
             transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
         }
+
+        /* ── Emil: hover ONLY on real pointer devices ─────────────────── */
+        @media (hover: hover) and (pointer: fine) {
+            .interactive:hover:not(:active) {
+                transform: translate(-2px, -2px);
+                box-shadow: 10px 10px 0px 0px var(--charcoal);
+            }
+        }
+        /* Active state is fine everywhere — it's deliberate press feedback */
         .interactive:active {
             transform: scale(0.97) translate(4px, 4px);
             box-shadow: 0px 0px 0px 0px var(--charcoal);
         }
-        .interactive:hover:not(:active) {
-            transform: translate(-2px, -2px);
-            box-shadow: 10px 10px 0px 0px var(--charcoal);
-        }
+
         .grain {
             position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
+            top: 0; left: 0;
+            height: 100%; width: 100%;
             pointer-events: none;
             z-index: 9999;
             opacity: 0.12;
@@ -64,29 +70,8 @@
             background-size: 32px 32px;
             opacity: 0.1;
         }
-        .stagger-item {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
-        }
-        @starting-style {
-            .stagger-item {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 12px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: var(--cream);
-            border-left: 3px solid var(--charcoal);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: var(--coral);
-            border: 3px solid var(--charcoal);
-        }
-        
+
+        /* ── Marquee ─────────────────────────────────────────────────── */
         .marquee {
             width: 100%;
             overflow: hidden;
@@ -98,11 +83,67 @@
         }
         .marquee span {
             display: inline-block;
+            /* linear — correct for constant-motion scrolling */
             animation: marquee 20s linear infinite;
         }
         @keyframes marquee {
-            0% { transform: translateX(0); }
+            0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
+        }
+
+        /* ── Fluid hero headline ─────────────────────────────────────── */
+        .hero-title {
+            font-size: clamp(3.5rem, 12vw, 8rem);
+            line-height: 0.85;
+            font-style: italic;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.03em;
+            font-family: 'Cabinet Grotesk', sans-serif;
+        }
+
+        /* ── Stagger entrance ────────────────────────────────────────── */
+        .stagger-item {
+            opacity: 1;
+            transform: translateY(0);
+            /* Emil: enter fast, specified property only */
+            transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+        }
+        @starting-style {
+            .stagger-item { opacity: 0; transform: translateY(24px); }
+        }
+
+        /* ── Custom scrollbar ────────────────────────────────────────── */
+        .custom-scrollbar::-webkit-scrollbar { width: 12px; }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--cream);
+            border-left: 3px solid var(--charcoal);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: var(--coral);
+            border: 3px solid var(--charcoal);
+        }
+
+        /* ── Mobile nav drawer (GitHub link) ─────────────────────────── */
+        .mobile-github {
+            display: flex;
+        }
+
+        /* ── Fluid section padding ────────────────────────────────────── */
+        .section-pad {
+            padding-top: clamp(4rem, 10vw, 8rem);
+            padding-bottom: clamp(4rem, 10vw, 8rem);
+        }
+
+        /* ── Reduced motion ──────────────────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+            .stagger-item,
+            .interactive,
+            .retro-shadow {
+                transition: none !important;
+                animation: none !important;
+            }
+            .marquee span { animation: none; }
         }
     </style>
 </head>
@@ -111,99 +152,112 @@
 <div class="grain"></div>
 <div class="fixed inset-0 grid-bg pointer-events-none -z-10"></div>
 
-<!-- Marquee -->
-<div class="marquee font-bold mono text-sm uppercase tracking-widest fixed top-0 z-50 retro-border border-l-0 border-r-0 border-t-0">
+<!-- ── Marquee ─────────────────────────────────────────────────────────── -->
+<div class="marquee mono text-xs font-bold uppercase tracking-widest fixed top-0 z-50 retro-border border-l-0 border-r-0 border-t-0">
     <span>
-        NO NEW APPS • ZERO BEHAVIOR CHANGE • INTELLIGENT ROUTING • GOOGLE NATIVE • 100% PRIVATE • OPEN SOURCE • NO NEW APPS • ZERO BEHAVIOR CHANGE • INTELLIGENT ROUTING • GOOGLE NATIVE • 100% PRIVATE • OPEN SOURCE • NO NEW APPS • ZERO BEHAVIOR CHANGE • INTELLIGENT ROUTING • GOOGLE NATIVE • 100% PRIVATE • OPEN SOURCE •
+        NO NEW APPS &nbsp;•&nbsp; ZERO BEHAVIOR CHANGE &nbsp;•&nbsp; INTELLIGENT ROUTING &nbsp;•&nbsp; GOOGLE NATIVE &nbsp;•&nbsp; 100% PRIVATE &nbsp;•&nbsp; OPEN SOURCE &nbsp;•&nbsp;
+        NO NEW APPS &nbsp;•&nbsp; ZERO BEHAVIOR CHANGE &nbsp;•&nbsp; INTELLIGENT ROUTING &nbsp;•&nbsp; GOOGLE NATIVE &nbsp;•&nbsp; 100% PRIVATE &nbsp;•&nbsp; OPEN SOURCE &nbsp;•&nbsp;
     </span>
 </div>
 
-<!-- Top Right Quick Links -->
-<div class="fixed top-16 right-6 z-40 hidden md:flex items-center">
-    <div class="interactive flex items-stretch retro-border retro-shadow bg-[var(--charcoal)]">
-        <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank" class="bg-white px-5 py-3 flex items-center gap-2 font-bold uppercase tracking-widest text-sm hover:bg-gray-50 transition-colors border-r-4 border-transparent" aria-label="Star Project">
-            <iconify-icon icon="lucide:github" class="text-lg"></iconify-icon> Star Project
-        </a>
-        
-    </div>
+<!-- ── GitHub Link — visible on all sizes ─────────────────────────────── -->
+<div class="fixed top-14 right-4 z-40 flex items-center">
+    <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank"
+       class="interactive flex items-center gap-2 bg-white retro-border retro-shadow px-4 py-2.5 font-bold uppercase tracking-widest text-xs md:text-sm"
+       aria-label="Star on GitHub">
+        <iconify-icon icon="lucide:github" class="text-base"></iconify-icon>
+        <span class="hidden sm:inline">Star Project</span>
+        <span class="sm:hidden">GitHub</span>
+    </a>
 </div>
 
-<!-- Hero Section -->
-<header class="relative pt-40 pb-32 px-6 overflow-hidden min-h-screen flex flex-col justify-center">
+<!-- ── Hero ───────────────────────────────────────────────────────────── -->
+<header class="relative pt-32 sm:pt-36 section-pad px-4 sm:px-6 overflow-hidden min-h-[90svh] flex flex-col justify-center">
     <div class="max-w-6xl mx-auto w-full relative z-10">
-        <div class="flex flex-col md:flex-row gap-12 items-center">
-            
+        <div class="flex flex-col lg:flex-row gap-10 xl:gap-16 items-center">
+
             <!-- Left: Typography -->
-            <div class="flex-1 space-y-8 stagger-item" style="transition-delay: 50ms;">
-                <div class="inline-block bg-white retro-border px-4 py-2 font-bold mono uppercase tracking-widest text-xs retro-shadow transform -rotate-2">
+            <div class="flex-1 space-y-6 sm:space-y-8 stagger-item" style="transition-delay: 50ms;">
+                <div class="inline-block bg-white retro-border px-3 py-1.5 font-bold mono uppercase tracking-widest text-xs retro-shadow transform -rotate-2">
                     v0.1.0
                 </div>
-                
-                <h1 class="text-7xl md:text-[8rem] font-black leading-[0.85] italic drop-shadow-md">
+
+                <h1 class="hero-title drop-shadow-md">
                     YOUR<br>
-                    <span class="text-transparent bg-clip-text" style="-webkit-text-stroke: 3px var(--charcoal); background-image: linear-gradient(to bottom, var(--coral), var(--coral));">BRAIN.</span><br>
+                    <span class="text-transparent bg-clip-text"
+                          style="-webkit-text-stroke: clamp(2px, 0.4vw, 3px) var(--charcoal); background-image: linear-gradient(to bottom, var(--coral), var(--coral));">
+                        BRAIN.
+                    </span><br>
                     SELF<br>
                     HOSTED.
                 </h1>
-                
-                <div class="border-l-8 border-[var(--mustard)] pl-6 py-2">
-                    <p class="text-2xl font-bold max-w-xl leading-tight">
-                        No one opens Notion to log an idea at 2 am.<br/>
+
+                <div class="border-l-8 border-[var(--mustard)] pl-5 py-1">
+                    <p class="text-lg sm:text-2xl font-bold max-w-xl leading-snug">
+                        No one opens Notion to log an idea at 11pm.<br/>
                         <span class="bg-[var(--teal)] text-white px-2 mt-1 inline-block">Everyone opens WhatsApp.</span>
                     </p>
                 </div>
 
-                <div class="flex flex-wrap gap-4 pt-4">
-                    <a href="#install" class="interactive bg-[var(--coral)] retro-border px-8 py-4 text-xl font-bold uppercase tracking-widest retro-shadow flex items-center gap-3">
+                <div class="flex flex-wrap gap-3 sm:gap-4 pt-2">
+                    <a href="#install"
+                       class="interactive bg-[var(--coral)] retro-border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-xl font-bold uppercase tracking-widest retro-shadow flex items-center gap-2 sm:gap-3">
                         <iconify-icon icon="lucide:terminal"></iconify-icon> Install Now
                     </a>
-                    <a href="https://github.com/your-repo/second-brain" target="_blank" class="interactive bg-white retro-border px-8 py-4 text-xl font-bold uppercase tracking-widest retro-shadow flex items-center gap-3">
+                    <a href="https://github.com/thesaiprasadrao/second-brain" target="_blank"
+                       class="interactive bg-white retro-border px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-xl font-bold uppercase tracking-widest retro-shadow flex items-center gap-2 sm:gap-3">
                         <iconify-icon icon="lucide:github"></iconify-icon> GitHub
                     </a>
                 </div>
             </div>
 
-            <!-- Right: The App / Interface -->
-            <div class="flex-1 w-full max-w-md relative stagger-item" style="transition-delay: 150ms;">
-                <div class="absolute -inset-4 bg-[var(--mustard)] retro-border -rotate-3 rounded-xl retro-shadow h-full w-full"></div>
-                <div class="bg-white retro-border rounded-xl relative z-10 flex flex-col h-[500px] overflow-hidden">
-                    
-                    <!-- Header -->
-                    <div class="bg-[var(--charcoal)] text-white px-4 py-3 flex items-center justify-between">
+            <!-- Right: Chat Mockup -->
+            <div class="flex-1 w-full max-w-sm sm:max-w-md lg:max-w-none relative stagger-item" style="transition-delay: 150ms;">
+                <!-- Decorative tilt layer — hidden on very small screens so it doesn't clip -->
+                <div class="absolute -inset-3 sm:-inset-4 bg-[var(--mustard)] retro-border hidden xs:block sm:block -rotate-3 rounded-xl h-full w-full"
+                     aria-hidden="true"></div>
+
+                <div class="bg-white retro-border rounded-xl relative z-10 flex flex-col overflow-hidden"
+                     style="height: clamp(380px, 55vw, 500px);">
+
+                    <!-- Titlebar -->
+                    <div class="bg-[var(--charcoal)] text-white px-4 py-3 flex items-center justify-between shrink-0">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-[var(--teal)] flex items-center justify-center border-2 border-white">
+                            <div class="w-8 h-8 rounded-full bg-[var(--teal)] flex items-center justify-center border-2 border-white shrink-0">
                                 <iconify-icon icon="lucide:bot"></iconify-icon>
                             </div>
-                            <div>
-                                <h3 class="text-sm m-0 leading-none">Second Brain</h3>
-                            </div>
+                            <h3 class="text-sm m-0 leading-none">Second Brain</h3>
                         </div>
                         <iconify-icon icon="lucide:lock" class="text-sm text-gray-400"></iconify-icon>
                     </div>
-                    
-                    <!-- Chat Body -->
-                    <div class="flex-1 bg-[#E5DDD0] p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+
+                    <!-- Chat body -->
+                    <div class="flex-1 bg-[#E5DDD0] p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 overflow-y-auto custom-scrollbar min-h-0">
                         <div class="flex justify-end">
-                            <div class="bg-[#DCF8C6] retro-border p-3 max-w-[85%] rounded-2xl rounded-tr-none text-sm font-medium shadow-sm">
+                            <div class="bg-[#DCF8C6] retro-border p-3 max-w-[88%] rounded-2xl rounded-tr-none text-xs sm:text-sm font-medium shadow-sm">
                                 Hey, add "linear.app" to my tools to check out. Also remind me to call the dentist Friday 3pm.
                             </div>
                         </div>
                         <div class="flex justify-start">
-                            <div class="bg-white retro-border p-3 max-w-[90%] rounded-2xl rounded-tl-none retro-shadow text-sm space-y-2">
-                                <p class="font-bold flex items-center gap-1"><iconify-icon icon="lucide:check-circle-2" class="text-[var(--teal)]"></iconify-icon> Captured & Routed:</p>
+                            <div class="bg-white retro-border p-3 max-w-[92%] rounded-2xl rounded-tl-none retro-shadow text-xs sm:text-sm space-y-2">
+                                <p class="font-bold flex items-center gap-1 text-xs sm:text-sm">
+                                    <iconify-icon icon="lucide:check-circle-2" class="text-[var(--teal)]"></iconify-icon> Captured &amp; Routed:
+                                </p>
                                 <ul class="mono text-xs space-y-1 bg-gray-100 p-2 border border-gray-300">
                                     <li class="flex items-center gap-2"><iconify-icon icon="logos:google-keep"></iconify-icon> Saved to Keep: "Tools to checkout"</li>
                                     <li class="flex items-center gap-2"><iconify-icon icon="logos:google-calendar"></iconify-icon> Scheduled: Dentist (Fri 3:00 PM)</li>
                                 </ul>
-                                <p class="text-xs opacity-60 italic mt-2">Processed instantly on-device in 1.2s</p>
+                                <p class="text-xs opacity-60 italic mt-1">Processed instantly on-device in 1.2s</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Input -->
-                    <div class="bg-gray-100 border-t-2 border-[var(--charcoal)] p-3 flex gap-2">
-                        <div class="flex-1 bg-white retro-border rounded-full px-4 py-2 text-sm text-gray-400 font-medium">Message yourself...</div>
-                        <div class="w-10 h-10 bg-[var(--teal)] rounded-full flex items-center justify-center text-white retro-border">
+
+                    <!-- Input bar -->
+                    <div class="bg-gray-100 border-t-2 border-[var(--charcoal)] p-3 flex gap-2 shrink-0">
+                        <div class="flex-1 bg-white retro-border rounded-full px-4 py-2 text-xs sm:text-sm text-gray-400 font-medium truncate">
+                            Message yourself...
+                        </div>
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 bg-[var(--teal)] rounded-full flex items-center justify-center text-white retro-border shrink-0">
                             <iconify-icon icon="lucide:mic"></iconify-icon>
                         </div>
                     </div>
@@ -214,63 +268,65 @@
     </div>
 </header>
 
-<!-- The Brutalist Features Section -->
-<section id="features" class="py-32 border-y-4 border-[var(--charcoal)] bg-white relative">
-    <div class="max-w-7xl mx-auto px-6 relative z-10">
-        
-        <div class="mb-20 text-center max-w-3xl mx-auto stagger-item">
-            <div class="inline-block font-black text-6xl text-[var(--charcoal)] mb-6 border-b-8 border-[var(--coral)] pb-2 display-font">
+<!-- ── Features ───────────────────────────────────────────────────────── -->
+<section id="features" class="section-pad border-y-4 border-[var(--charcoal)] bg-white relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+
+        <div class="mb-12 sm:mb-20 text-center max-w-3xl mx-auto stagger-item">
+            <div class="inline-block font-black display-font mb-6 border-b-8 border-[var(--coral)] pb-2"
+                 style="font-size: clamp(2.5rem, 8vw, 4rem);">
                 NO SUBSCRIPTIONS.
             </div>
-            <p class="text-2xl font-bold">Opinionated, self-hosted infrastructure. You own the server, you own the brain. Noting things down shouldn't be a chore.</p>
+            <p class="text-lg sm:text-2xl font-bold">
+                Opinionated, self-hosted infrastructure. You own the server, you own the brain.
+                Noting things down shouldn't be a chore.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            <!-- Active Feature 1 -->
-            <div class="bg-[var(--cream)] retro-border p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 50ms;">
-                <iconify-icon icon="lucide:bot" class="text-5xl text-[var(--teal)] mb-4"></iconify-icon>
-                <h3 class="text-2xl font-black mb-3">Smart Routing</h3>
-                <p class="font-medium flex-1">Understand your unstructured thoughts. The AI parses intents and automatically categorizes notes, events, and tasks.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mb-12 sm:mb-16">
+            <div class="bg-[var(--cream)] retro-border p-5 sm:p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 50ms;">
+                <iconify-icon icon="lucide:bot" class="text-4xl sm:text-5xl text-[var(--teal)] mb-4"></iconify-icon>
+                <h3 class="text-xl sm:text-2xl font-black mb-3">Smart Routing</h3>
+                <p class="font-medium flex-1 text-sm sm:text-base">Understand your unstructured thoughts. The AI parses intents and automatically categorizes notes, events, and tasks.</p>
             </div>
-            <!-- Active Feature 2 -->
-            <div class="bg-[var(--teal)] text-white retro-border p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 100ms;">
-                <iconify-icon icon="lucide:layers" class="text-5xl text-[var(--mustard)] mb-4"></iconify-icon>
-                <h3 class="text-2xl font-black mb-3">Google Native</h3>
-                <p class="font-medium flex-1 text-teal-100">Sync directly with Google Keep, Tasks, and Calendar. Native reminders push straight to your phone.</p>
+            <div class="bg-[var(--teal)] text-white retro-border p-5 sm:p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 100ms;">
+                <iconify-icon icon="lucide:layers" class="text-4xl sm:text-5xl text-[var(--mustard)] mb-4"></iconify-icon>
+                <h3 class="text-xl sm:text-2xl font-black mb-3">Google Native</h3>
+                <p class="font-medium flex-1 text-teal-100 text-sm sm:text-base">Sync directly with Google Keep, Tasks, and Calendar. Native reminders push straight to your phone.</p>
             </div>
-            <!-- Active Feature 3 -->
-            <div class="bg-[var(--mustard)] retro-border p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 150ms;">
-                <iconify-icon icon="lucide:message-square" class="text-5xl text-[var(--charcoal)] mb-4"></iconify-icon>
-                <h3 class="text-2xl font-black mb-3">Zero Friction</h3>
-                <p class="font-medium flex-1">No new apps to install. No context-switching. Send ideas to yourself on WhatsApp immediately.</p>
+            <div class="bg-[var(--mustard)] retro-border p-5 sm:p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 150ms;">
+                <iconify-icon icon="lucide:message-square" class="text-4xl sm:text-5xl text-[var(--charcoal)] mb-4"></iconify-icon>
+                <h3 class="text-xl sm:text-2xl font-black mb-3">Zero Friction</h3>
+                <p class="font-medium flex-1 text-sm sm:text-base">No new apps to install. No context-switching. Send ideas to yourself on WhatsApp immediately.</p>
             </div>
-            <!-- Active Feature 4 -->
-            <div class="bg-[var(--coral)] retro-border p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 200ms;">
-                <iconify-icon icon="lucide:lock" class="text-5xl text-[var(--charcoal)] mb-4"></iconify-icon>
-                <h3 class="text-2xl font-black mb-3">Radical Privacy</h3>
-                <p class="font-medium flex-1">100% self-hosted infrastructure. Bring your own API keys. No subscriptions, completely yours.</p>
+            <div class="bg-[var(--coral)] retro-border p-5 sm:p-6 retro-shadow flex flex-col interactive stagger-item" style="transition-delay: 200ms;">
+                <iconify-icon icon="lucide:lock" class="text-4xl sm:text-5xl text-[var(--charcoal)] mb-4"></iconify-icon>
+                <h3 class="text-xl sm:text-2xl font-black mb-3">Radical Privacy</h3>
+                <p class="font-medium flex-1 text-sm sm:text-base">100% self-hosted infrastructure. Bring your own API keys. No subscriptions, completely yours.</p>
             </div>
         </div>
 
         <!-- Roadmap -->
-        <div class="mt-8 pt-12 border-t-4 border-[var(--charcoal)] stagger-item">
-            <h3 class="text-3xl font-black mb-6 flex items-center gap-3"><iconify-icon icon="lucide:map" class="text-[var(--coral)]"></iconify-icon> UPCOMING ROADMAP</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="pt-10 sm:pt-12 border-t-4 border-[var(--charcoal)] stagger-item">
+            <h3 class="text-2xl sm:text-3xl font-black mb-5 sm:mb-6 flex items-center gap-3">
+                <iconify-icon icon="lucide:map" class="text-[var(--coral)]"></iconify-icon> UPCOMING ROADMAP
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="border-2 border-[var(--charcoal)] p-4 flex items-start gap-3 bg-[var(--cream)] opacity-80">
-                    <iconify-icon icon="lucide:search" class="text-xl mt-1 shrink-0"></iconify-icon>
-                    <div><strong class="block uppercase tracking-wider text-sm mb-1">Semantic Recall</strong><span class="text-xs">Find ideas by meaning using local vector search.</span></div>
+                    <iconify-icon icon="lucide:search" class="text-xl mt-0.5 shrink-0"></iconify-icon>
+                    <div><strong class="block uppercase tracking-wider text-xs sm:text-sm mb-1">Semantic Recall</strong><span class="text-xs">Find ideas by meaning using local vector search.</span></div>
                 </div>
                 <div class="border-2 border-[var(--charcoal)] p-4 flex items-start gap-3 bg-[var(--cream)] opacity-80">
-                    <iconify-icon icon="lucide:mic" class="text-xl mt-1 shrink-0"></iconify-icon>
-                    <div><strong class="block uppercase tracking-wider text-sm mb-1">Voice & Vision</strong><span class="text-xs">Audio transcription and image text extraction.</span></div>
+                    <iconify-icon icon="lucide:mic" class="text-xl mt-0.5 shrink-0"></iconify-icon>
+                    <div><strong class="block uppercase tracking-wider text-xs sm:text-sm mb-1">Voice &amp; Vision</strong><span class="text-xs">Audio transcription and image text extraction.</span></div>
                 </div>
                 <div class="border-2 border-[var(--charcoal)] p-4 flex items-start gap-3 bg-[var(--cream)] opacity-80">
-                    <iconify-icon icon="lucide:bell-ring" class="text-xl mt-1 shrink-0"></iconify-icon>
-                    <div><strong class="block uppercase tracking-wider text-sm mb-1">Proactive Cron</strong><span class="text-xs">Morning briefings, idea digests, and weekly nudges.</span></div>
+                    <iconify-icon icon="lucide:bell-ring" class="text-xl mt-0.5 shrink-0"></iconify-icon>
+                    <div><strong class="block uppercase tracking-wider text-xs sm:text-sm mb-1">Proactive Cron</strong><span class="text-xs">Morning briefings, idea digests, and weekly nudges.</span></div>
                 </div>
                 <div class="border-2 border-[var(--charcoal)] p-4 flex items-start gap-3 bg-[var(--cream)] opacity-80">
-                    <iconify-icon icon="lucide:layout-dashboard" class="text-xl mt-1 shrink-0"></iconify-icon>
-                    <div><strong class="block uppercase tracking-wider text-sm mb-1">Web Dashboard</strong><span class="text-xs">A unified interface to query your second brain.</span></div>
+                    <iconify-icon icon="lucide:layout-dashboard" class="text-xl mt-0.5 shrink-0"></iconify-icon>
+                    <div><strong class="block uppercase tracking-wider text-xs sm:text-sm mb-1">Web Dashboard</strong><span class="text-xs">A unified interface to query your second brain.</span></div>
                 </div>
             </div>
         </div>
@@ -278,77 +334,106 @@
     </div>
 </section>
 
-<!-- Terminal Setup / CLI -->
-<section id="install" class="py-32 bg-[var(--charcoal)] text-[var(--cream)] relative overflow-hidden">
-    <!-- Background Decor -->
-    <div class="absolute top-0 right-0 p-20 opacity-10 pointer-events-none transform rotate-12 rotate-y-12">
-        <iconify-icon icon="lucide:terminal-square" class="text-[30rem]"></iconify-icon>
+<!-- ── Install / Terminal ──────────────────────────────────────────────── -->
+<section id="install" class="section-pad bg-[var(--charcoal)] text-[var(--cream)] relative overflow-hidden">
+    <!-- Background decor — pointer-events off, aria-hidden -->
+    <div class="absolute top-0 right-0 p-10 sm:p-20 opacity-10 pointer-events-none transform rotate-12" aria-hidden="true">
+        <iconify-icon icon="lucide:terminal-square" style="font-size: clamp(12rem, 30vw, 30rem);"></iconify-icon>
     </div>
 
-    <div class="max-w-5xl mx-auto px-6 relative z-10 flex flex-col lg:flex-row gap-16 items-center">
-        
-        <div class="flex-1 space-y-6">
-            <h2 class="text-6xl font-black leading-none display-font text-[var(--mustard)]">ONE LINE.<br>15 MINUTES.</h2>
-            <p class="text-xl font-bold opacity-80 max-w-md">No crazy configs. Published to npm. The wizard handles OAuth setup and securely links your WhatsApp account.</p>
-            
-            <div class="mt-8 space-y-3">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col lg:flex-row gap-10 xl:gap-16 items-center">
+
+        <!-- Left copy -->
+        <div class="flex-1 space-y-5 sm:space-y-6 w-full">
+            <h2 class="display-font font-black leading-none text-[var(--mustard)]"
+                style="font-size: clamp(2.5rem, 8vw, 4rem);">
+                ONE LINE.<br>15 MINUTES.
+            </h2>
+            <p class="text-base sm:text-xl font-bold opacity-80 max-w-md">
+                No crazy configs. Published to npm. The wizard handles OAuth setup and securely links your WhatsApp account.
+            </p>
+
+            <div class="space-y-3 w-full">
                 <p class="mono text-xs uppercase tracking-widest opacity-60">NPM Install</p>
-                <div class="bg-black retro-border border-gray-600 p-3 flex justify-between items-center group cursor-pointer hover:border-[var(--mustard)] transition-colors" onclick="navigator.clipboard.writeText('npm install -g @saiprasadrao/2nd-brain')">
-                    <code class="mono text-sm text-[var(--mustard)]">npm install -g @saiprasadrao/2nd-brain</code>
-                    <iconify-icon icon="lucide:copy" class="opacity-50 group-hover:opacity-100 transition-opacity"></iconify-icon>
-                </div>
+                <button
+                    class="w-full bg-black retro-border border-gray-600 p-3 flex justify-between items-center group cursor-pointer hover:border-[var(--mustard)] transition-colors text-left"
+                    onclick="navigator.clipboard.writeText('npm install -g @saiprasadrao/2nd-brain').then(() => this.querySelector('.copy-icon').setAttribute('icon','lucide:check'))"
+                    aria-label="Copy npm install command">
+                    <code class="mono text-xs sm:text-sm text-[var(--mustard)] truncate mr-3">npm install -g @saiprasadrao/2nd-brain</code>
+                    <iconify-icon icon="lucide:copy" class="copy-icon opacity-50 group-hover:opacity-100 transition-opacity shrink-0"></iconify-icon>
+                </button>
+
                 <p class="mono text-xs uppercase tracking-widest opacity-60 mt-4">One-Liner Install</p>
-                <div class="bg-black retro-border border-gray-600 p-3 flex justify-between items-center group cursor-pointer hover:border-[var(--teal)] transition-colors" onclick="navigator.clipboard.writeText('curl -sSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash')">
-                    <code class="mono text-xs md:text-sm text-[var(--teal)] overflow-x-hidden whitespace-nowrap text-ellipsis flex-1">curl -sSL https://raw.github... | bash</code>
-                    <iconify-icon icon="lucide:copy" class="opacity-50 group-hover:opacity-100 transition-opacity ml-2 shrink-0"></iconify-icon>
-                </div>
+                <button
+                    class="w-full bg-black retro-border border-gray-600 p-3 flex justify-between items-center group cursor-pointer hover:border-[var(--teal)] transition-colors text-left"
+                    onclick="navigator.clipboard.writeText('curl -sSL https://raw.githubusercontent.com/thesaiprasadrao/second-brain/main/install.sh | bash').then(() => this.querySelector('.copy-icon2').setAttribute('icon','lucide:check'))"
+                    aria-label="Copy curl install command">
+                    <code class="mono text-xs sm:text-sm text-[var(--teal)] truncate mr-3">curl -sSL https://raw.github... | bash</code>
+                    <iconify-icon icon="lucide:copy" class="copy-icon2 opacity-50 group-hover:opacity-100 transition-opacity shrink-0"></iconify-icon>
+                </button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 pt-8 border-t-2 border-gray-600 mt-8">
-                <div><span class="block text-2xl font-black text-[var(--coral)]">Zero</span><span class="mono text-xs uppercase tracking-widest opacity-60">Subscriptions</span></div>
-                <div><span class="block text-2xl font-black text-[var(--teal)]">WhatsApp/Telegram </span><span class="mono text-xs uppercase tracking-widest opacity-60">Bridge</span></div>
-                <div><span class="block text-2xl font-black text-[var(--mustard)]">Local</span><span class="mono text-xs uppercase tracking-widest opacity-60">Storage</span></div>
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 pt-6 sm:pt-8 border-t-2 border-gray-600 mt-6 sm:mt-8">
+                <div>
+                    <span class="block text-xl sm:text-2xl font-black text-[var(--coral)]">Zero</span>
+                    <span class="mono text-xs uppercase tracking-widest opacity-60">Subscriptions</span>
+                </div>
+                <div>
+                    <span class="block text-sm sm:text-xl font-black text-[var(--teal)]">WhatsApp/<wbr>Telegram</span>
+                    <span class="mono text-xs uppercase tracking-widest opacity-60">Bridge</span>
+                </div>
+                <div>
+                    <span class="block text-xl sm:text-2xl font-black text-[var(--mustard)]">Local</span>
+                    <span class="mono text-xs uppercase tracking-widest opacity-60">Storage</span>
+                </div>
             </div>
         </div>
 
-        <!-- Terminal Window Mockup -->
+        <!-- Terminal mockup -->
         <div class="flex-1 w-full">
-            <div class="bg-[#1e1e1e] retro-border border-gray-600 rounded-lg overflow-hidden retro-shadow border-4 hover:-translate-y-2 transition-transform duration-300">
+            <div class="bg-[#1e1e1e] retro-border border-gray-600 rounded-lg overflow-hidden retro-shadow border-4 transition-transform duration-300 hover:-translate-y-2">
+                <!-- Traffic lights bar -->
                 <div class="bg-gray-800 px-4 py-2 flex items-center gap-2 border-b-2 border-gray-600">
                     <div class="w-3 h-3 rounded-full bg-[var(--coral)]"></div>
                     <div class="w-3 h-3 rounded-full bg-[var(--mustard)]"></div>
                     <div class="w-3 h-3 rounded-full bg-[var(--teal)]"></div>
                     <div class="ml-4 mono text-xs text-gray-400">bash — second-brain</div>
                 </div>
-                <div class="p-6 font-mono text-sm leading-relaxed text-green-400">
-                    <span class="text-blue-400">~$</span> 2nd-brain<br><br>
-                    <span class="text-white font-bold">Welcome to Second Brain</span><br>
-                    <span class="text-gray-400">?</span> Scan QR to connect WhatsApp <span class="text-[var(--teal)]">[Connected]</span><br>
-                    <span class="text-gray-400">?</span> Enter AI API key <span class="text-[var(--teal)]">****************</span><br>
-                    <span class="text-gray-400">?</span> Choose storage backend <span class="text-[var(--teal)]">Google Keep</span><br>
-                    <span class="text-gray-400">?</span> Connect Google Account <span class="text-[var(--teal)]">[OAuth Success]</span><br><br>
-                    <span class="text-[var(--mustard)]">▶ System active. Text yourself to start.</span><br>
-                    <span class="animate-pulse">_</span>
+                <div class="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed text-green-400 overflow-x-auto">
+<span class="text-blue-400">~$</span> 2nd-brain<br><br>
+<span class="text-white font-bold">Welcome to Second Brain</span><br>
+<span class="text-gray-400">?</span> Scan QR to connect WhatsApp <span class="text-[var(--teal)]">[Connected]</span><br>
+<span class="text-gray-400">?</span> Enter AI API key <span class="text-[var(--teal)]">****************</span><br>
+<span class="text-gray-400">?</span> Choose storage backend <span class="text-[var(--teal)]">Google Keep</span><br>
+<span class="text-gray-400">?</span> Connect Google Account <span class="text-[var(--teal)]">[OAuth Success]</span><br><br>
+<span class="text-[var(--mustard)]">▶ System active. Text yourself to start.</span><br>
+<span class="animate-pulse">_</span>
                 </div>
             </div>
         </div>
-        
+
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="bg-[var(--cream)] border-t-8 border-[var(--charcoal)] py-12 text-center text-[var(--charcoal)]">
-    <div class="max-w-4xl mx-auto px-6">
-        <h2 class="text-4xl font-black mb-8 display-font">STOP LOSING YOUR THOUGHTS.</h2>
-        <a href="https://github.com/thesaiprasadrao/second-brain?tab=readme-ov-file#-quick-start-5-minutes" target="_blank" class="inline-block interactive bg-[var(--charcoal)] text-white retro-border border-[var(--charcoal)] px-10 py-4 text-xl font-bold uppercase tracking-widest retro-shadow">
+<!-- ── Footer ─────────────────────────────────────────────────────────── -->
+<footer class="bg-[var(--cream)] border-t-8 border-[var(--charcoal)] py-10 sm:py-12 text-center text-[var(--charcoal)] px-4">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="font-black display-font mb-6 sm:mb-8" style="font-size: clamp(1.75rem, 6vw, 2.5rem);">
+            STOP LOSING YOUR THOUGHTS.
+        </h2>
+        <a href="https://github.com/thesaiprasadrao/second-brain?tab=readme-ov-file#-quick-start-5-minutes"
+           target="_blank"
+           class="inline-block interactive bg-[var(--charcoal)] text-white retro-border border-[var(--charcoal)] px-8 sm:px-10 py-3 sm:py-4 text-base sm:text-xl font-bold uppercase tracking-widest retro-shadow">
             Setup Now
         </a>
-        <p class="mt-12 font-bold mono text-sm opacity-60">Second Brain © 2026. Self-hosted & Open Source.</p>
+        <p class="mt-10 sm:mt-12 font-bold mono text-xs sm:text-sm opacity-60">
+            Second Brain © 2026. Self-hosted &amp; Open Source.
+        </p>
     </div>
 </footer>
 
 <script>
-    // Simple intersection observer to trigger staggered animations
+    // Stagger entrance via IntersectionObserver
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -356,11 +441,9 @@
                 entry.target.style.transform = 'translateY(0)';
             }
         });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.08 });
 
-    document.querySelectorAll('.stagger-item').forEach((el) => {
-        observer.observe(el);
-    });
+    document.querySelectorAll('.stagger-item').forEach(el => observer.observe(el));
 </script>
 
 </body>
