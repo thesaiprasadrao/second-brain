@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  second-brain:
+    build: .
+    container_name: second-brain
+    stdin_open: true
+    tty: true
+    volumes:
+      # Persistent data
+      - ./data/.env:/app/.env
+      - ./data/memory.db:/app/memory.db
+      - ./data/auth:/app/auth
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    # Optional: expose if running on remote server
+    # ports:
+    #   - "4242:4242"  # For OAuth callback
+
+# Usage:
+# docker-compose up --build
+# 
+# First time:
+# 1. Enter interactive setup when prompted
+# 2. Complete setup steps
+# 3. Server will start
+#
+# To send messages from CLI:
+# docker-compose exec second-brain npm run send "your message"
+#
+# To view logs:
+# docker-compose logs -f

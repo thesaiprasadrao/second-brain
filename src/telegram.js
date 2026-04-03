@@ -19,6 +19,8 @@ export function startTelegram() {
 
   const allowChatId = process.env.TELEGRAM_CHAT_ID;
   const bot = new TelegramBot(token, { polling: true });
+  
+  // Start the TUI for local terminal interaction
   startTelegramTUI(bot, allowChatId);
 
   bot.on('message', async (msg) => {
@@ -38,49 +40,89 @@ export function startTelegram() {
     const text = normalizeText(msg);
     if (!text) return;
 
-    saveMessage('user', text);
-    log.info(`Telegram in: ${text}`);
-    console.log(`\n→ ${text}\n> `);
-
-    try {
-      const reply = await pipeline({ message: { conversation: text } });
-      if (!reply) return;
-
-      await bot.sendMessage(chatId, reply);
-      saveMessage('assistant', reply);
-      log.info(`Telegram out: ${reply}`);
-      console.log(`\n← ${reply}\n> `);
-    } catch (err) {
-      log.error(`Telegram pipeline: ${err.message}`);
-      try {
-        await bot.sendMessage(chatId, 'Something went wrong. Try again.');
-      } catch (sendErr) {
-        log.error(`Telegram send failed: ${sendErr.message}`);
-      }
-    }
+    await handleIncomingMessage(text, bot, chatId);
   });
 
   return bot;
 }
 
-function startTelegramTUI(bot, chatId) {
-  if (!chatId) return;
+async function handleIncomingMessage(text, bot, chatId) {
+  // Don't process messages from TUI - they'll be handled locally
+  if (process.env.SKIP_TELEGRAM_ECHO === 'true') return;
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  console.log('\nTelegram bridge active. Type a message and press Enter.\n');
+  saveMessage('user', text);
+  log.info(`Telegram in: ${text}`);
+  console.log(`\n→ ${text}`);
 
-  const prompt = () => rl.question('> ', async (input) => {
-    const text = input.trim();
-    if (!text) return prompt();
+  try {
+    const reply = await pipeline({ message: { conversation: text } });
+    if (!reply) return;
 
+    await bot.sendMessage(chatId, reply);
+    saveMessage('assistant', reply);
+    log.info(`Telegram out: ${reply}`);
+    console.log(`← ${reply}\n> `);
+  } catch (err) {
+    log.error(`Telegram pipeline: ${err.message}`);
     try {
-      await bot.sendMessage(chatId, text);
-      log.info(`Telegram TUI out: ${text}`);
-    } catch (err) {
-      log.error(`Telegram TUI send failed: ${err.message}`);
+      await bot.sendMessage(chatId, 'Something went wrong. Try again.');
+    } catch (sendErr) {
+      log.error(`Telegram send failed: ${sendErr.message}`);
     }
-    prompt();
+  }
+}
+
+function startTelegramTUI(bot, chatId) {
+  if (!chatId) {
+    log.warn('TELEGRAM_CHAT_ID not set - TUI disabled');
+    return;
+  }
+
+  const rl = readline.createInterface({ 
+    input: process.stdin, 
+    output: process.stdout,
+    prompt: '> '
   });
 
-  prompt();
+  console.log('\n📱 Telegram bridge active. Type messages here and they sync with Telegram.\n');
+  rl.prompt();
+
+  rl.on('line', async (input) => {
+    const text = input.trim();
+    if (!text) {
+      rl.prompt();
+      return;
+    }
+
+    saveMessage('user', text);
+    log.info(`TUI in: ${text}`);
+    console.log(`  → ${text}`);
+
+    try {
+      // Send to Telegram so it appears in the chat
+      await bot.sendMessage(chatId, text);
+      
+      // Process through pipeline
+      const reply = await pipeline({ message: { conversation: text } });
+      
+      if (reply) {
+        // Save and send reply
+        saveMessage('assistant', reply);
+        log.info(`TUI out: ${reply}`);
+        
+        await bot.sendMessage(chatId, reply);
+        console.log(`  ← ${reply}`);
+      }
+    } catch (err) {
+      log.error(`TUI error: ${err.message}`);
+      console.log(`  ⚠️  Error: ${err.message}`);
+    }
+    
+    rl.prompt();
+  });
+
+  rl.on('close', () => {
+    log.info('TUI closed');
+    process.exit(0);
+  });
 }

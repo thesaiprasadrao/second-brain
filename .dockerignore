@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+memory.db
+memory.db-shm
+memory.db-wal
+auth/
+.env
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+.DS_Store

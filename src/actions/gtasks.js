@@ -21,17 +21,38 @@ async function getOrCreateList(tasks, listName) {
 }
 
 export async function addTask(entities) {
-  const tasks = getTasks();
-  const listId = await getOrCreateList(tasks, entities.list_name ?? '@default');
+  try {
+    const tasks = getTasks();
+    const listId = await getOrCreateList(tasks, entities.list_name ?? '@default');
 
-  await tasks.tasks.insert({
-    tasklist: listId,
-    requestBody: {
+    const body = {
       title: entities.title,
       notes: entities.body ?? undefined,
-      due: entities.datetime ?? undefined,
-    },
-  });
+    };
+
+    // Google Tasks API expects date in RFC 3339 format
+    // The documentation says "due": "2019-10-01" format works
+    if (entities.datetime) {
+      const dueDate = new Date(entities.datetime);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      if (dueDate >= now) {
+        // Pass just the date part
+        body.due = entities.datetime;
+      }
+    }
+
+    const result = await tasks.tasks.insert({
+      tasklist: listId,
+      requestBody: body,
+    });
+
+    return result.data.id;
+  } catch (err) {
+    console.error('Failed to create task:', err.message);
+    throw err;
+  }
 }
 
 export async function addListItem(entities) {

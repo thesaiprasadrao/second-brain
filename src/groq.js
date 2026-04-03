@@ -4,29 +4,36 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const CLASSIFY_PROMPT = `You are a personal assistant. Classify every user message into exactly one intent and return ONLY valid JSON.
 
+TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+
 INTENTS:
 - add_task         : todos, things to do by a deadline
 - add_list_item    : adding to a named list (groceries, books, etc.)
 - create_event     : calendar events, meetings
 - set_reminder     : reminders at a specific time
 - query_schedule   : asking about upcoming events or free time
-- recall           : asking to retrieve or summarize past notes or ideas
+- recall           : asking to retrieve or summarize past notes or ideas (what did I save, what was that about X?)
 - capture          : ideas, tools, links, notes, thoughts to save
-- converse         : greetings, casual chat, questions not meant to be saved
+- converse         : greetings, casual chat, questions not meant to be saved, general knowledge questions
 
 Rules:
 - Greetings and small talk are "converse"
-- Questions are "converse" unless clearly about schedule or recall
-- Use "capture" for statements or fragments meant to be saved
+- General knowledge questions (weather, cooking, math, etc.) are "converse" 
+- Only use "recall" for questions about things the user previously saved
+- "How is the weather?" = converse, "What did I save about react?" = recall
+- Use "capture" for statements or fragments meant to be saved (ideas, links, etc.)
 - For recall, set "query" to the user's information need
+- For add_list_item, extract both the item (as title) and list name
+- For datetime, use YYYY-MM-DD format only (no time), or leave null if no date given
+- Calculate relative dates (e.g., "friday", "tomorrow", "next week") based on TODAY'S DATE
 
 RESPONSE SCHEMA:
 {
   "intent": "<one of the intents above>",
   "entities": {
-    "title": "<short title or null>",
+    "title": "<item name for list_item, task name for task, or event name for events>",
     "body": "<full content or null>",
-    "datetime": "<ISO 8601 or null>",
+    "datetime": "<YYYY-MM-DD only, no time component or null>",
     "list_name": "<list name or null>"
   },
   "response": "<short reply under 2 sentences>",

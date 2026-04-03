@@ -1,17 +1,29 @@
 {
   "name": "second-brain",
   "version": "0.1.0",
-  "description": "WhatsApp AI second brain — self-hosted, personal, zero behavior change",
+  "description": "🧠 Your personal AI second brain — self-hosted, end-to-end encrypted, zero data sharing",
   "type": "module",
   "main": "src/index.js",
   "bin": {
     "second-brain": "./bin/cli.js"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "setup": "node src/setup.js",
-    "logs": "tail -f second-brain.log"
+    "start": "node bin/cli.js dashboard",
+    "dev": "node src/index.js",
+    "setup": "node bin/cli.js setup",
+    "send": "node bin/cli.js send",
+    "logs": "tail -f second-brain.log",
+    "clean": "rm -f memory.db* auth/ .env"
   },
+  "keywords": [
+    "ai",
+    "second-brain",
+    "self-hosted",
+    "telegram",
+    "whatsapp",
+    "personal-assistant",
+    "llm"
+  ],
   "dependencies": {
     "@clack/prompts": "^0.9.1",
     "@whiskeysockets/baileys": "^6.7.5",
