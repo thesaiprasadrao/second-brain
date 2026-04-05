@@ -2,7 +2,7 @@ import Groq from 'groq-sdk';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const CLASSIFY_PROMPT = `You are a personal assistant. Classify every user message into exactly one intent and return ONLY valid JSON.
+const CLASSIFY_PROMPT = `You are a personal assistant. Classify every user message into ONE or MORE intents and return ONLY valid JSON.
 
 TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
 
@@ -22,6 +22,8 @@ Rules:
 - Only use "recall" for questions about things the user previously saved
 - "How is the weather?" = converse, "What did I save about react?" = recall
 - Use "capture" for statements or fragments meant to be saved (ideas, links, etc.)
+- If a message contains MULTIPLE distinct actions (e.g., "save X and remind me at Y"), return MULTIPLE intents in the "intents" array
+- For each intent, extract its specific entities
 - For recall, set "query" to the user's information need
 - For add_list_item, extract both the item (as title) and list name
 - For datetime, use YYYY-MM-DD format only (no time), or leave null if no date given
@@ -29,15 +31,19 @@ Rules:
 
 RESPONSE SCHEMA:
 {
-  "intent": "<one of the intents above>",
-  "entities": {
-    "title": "<item name for list_item, task name for task, or event name for events>",
-    "body": "<full content or null>",
-    "datetime": "<YYYY-MM-DD only, no time component or null>",
-    "list_name": "<list name or null>"
-  },
-  "response": "<short reply under 2 sentences>",
-  "query": "<recall query or null, only for recall>"
+  "intents": [
+    {
+      "intent": "<one of the intents above>",
+      "entities": {
+        "title": "<item name for list_item, task name for task, or event name for events>",
+        "body": "<full content or null>",
+        "datetime": "<YYYY-MM-DD only, no time component or null>",
+        "list_name": "<list name or null>"
+      },
+      "query": "<recall query or null, only for recall>"
+    }
+  ],
+  "response": "<short reply under 2 sentences acknowledging all intents>"
 }`;
 
 const CATEGORIZE_PROMPT = `You are a personal second brain assistant. The user sent you something to save. Suggest the 3 most likely categories.

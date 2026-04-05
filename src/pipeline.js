@@ -145,32 +145,51 @@ export async function pipeline(msg) {
   const mergedText = mergeWithRecent(text);
   const { history } = buildContext();
   const result = await classify(mergedText, history);
-  let { intent, entities, response, query } = result;
-
-  if (intent === 'converse' && isLikelyCapture(text)) {
-    intent = 'capture';
+  
+  // Handle both old single-intent format and new multi-intent format
+  const intentsArray = result.intents || (result.intent ? [{ intent: result.intent, entities: result.entities, query: result.query }] : []);
+  
+  if (!intentsArray.length) {
+    return result.response ?? null;
   }
 
-  if (intent === 'add_list_item') {
+  // If single intent, handle directly
+  if (intentsArray.length === 1) {
+    const { intent, entities, query } = intentsArray[0];
+    return await processSingleIntent(text, intent, entities, query, history, mergedText);
+  }
+
+  // Multiple intents — process all sequentially
+  return await processMultipleIntents(intentsArray, history, mergedText, text);
+}
+
+async function processSingleIntent(text, intent, entities, query, history, mergedText) {
+  let finalIntent = intent;
+
+  if (finalIntent === 'converse' && isLikelyCapture(text)) {
+    finalIntent = 'capture';
+  }
+
+  if (finalIntent === 'add_list_item') {
     const title = entities?.title?.trim();
     const listName = entities?.list_name?.trim();
     if (!title || !listName || ['it', 'this', 'that'].includes(title.toLowerCase())) {
-      intent = 'capture';
+      finalIntent = 'capture';
     }
   }
 
-  if (text.trim().endsWith('?') && intent === 'capture') {
-    return response ?? null;
+  if (text.trim().endsWith('?') && finalIntent === 'capture') {
+    return null;
   }
 
-  if (intent === 'capture' && text.trim().split(/\s+/).length <= 2) {
+  if (finalIntent === 'capture' && text.trim().split(/\s+/).length <= 2) {
     const lower = text.trim().toLowerCase();
     if (['hi', 'hey', 'hello', 'yo', 'sup'].includes(lower)) {
-      return response ?? null;
+      return null;
     }
   }
 
-  if (intent === 'recall') {
+  if (finalIntent === 'recall') {
     const recallQuery = query ?? mergedText;
     const recallContext = await buildRecallContext(recallQuery, 5);
     if (!recallContext.recall.length) {
@@ -181,19 +200,51 @@ export async function pipeline(msg) {
     return answer ?? "I couldn't find anything related yet.";
   }
 
-  if (intent === 'converse') {
-    return response ?? null;
+  if (finalIntent === 'converse') {
+    return null;
   }
 
-  if (DIRECT_INTENTS.has(intent)) {
-    return await route(intent, entities) ?? response;
+  if (DIRECT_INTENTS.has(finalIntent)) {
+    return await route(finalIntent, entities) ?? null;
   }
 
   // Capture flow — ask user to categorize
-  const cat = await categorize(mergedText, history);
+  const { history: _ } = buildContext();
+  const cat = await categorize(mergedText, _);
   const category = cat.options?.[0] ?? 'Inbox';
   savePending({ title: cat.title, body: cat.body, options: [category], step: 'awaiting_confirm' });
   return `Save this as "${category}: ${cat.title}"? (yes/no)`;
+}
+
+async function processMultipleIntents(intentsArray, history, mergedText, originalText) {
+  const responses = [];
+  
+  for (const { intent, entities, query } of intentsArray) {
+    let result = null;
+
+    if (intent === 'capture') {
+      const cat = await categorize(entities?.body ?? entities?.title ?? mergedText, history);
+      const category = cat.options?.[0] ?? 'Inbox';
+      await saveCapture(category, cat.title, cat.body);
+      result = `Saved — ${category}: ${cat.title}`;
+    } else if (intent === 'recall') {
+      const recallQuery = query ?? mergedText;
+      const recallContext = await buildRecallContext(recallQuery, 5);
+      if (recallContext.recall.length) {
+        result = await answerRecall(recallQuery, recallContext.recall, history);
+      }
+    } else if (DIRECT_INTENTS.has(intent)) {
+      result = await route(intent, entities);
+    } else if (intent === 'converse') {
+      result = null;
+    }
+
+    if (result) {
+      responses.push(result);
+    }
+  }
+
+  return responses.length > 0 ? responses.join('\n') : null;
 }
 
 function mergeWithRecent(text) {
