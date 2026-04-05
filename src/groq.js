@@ -16,14 +16,20 @@ INTENTS:
 - capture          : ideas, tools, links, notes, thoughts to save
 - converse         : greetings, casual chat, questions not meant to be saved, general knowledge questions
 
-Rules:
+CRITICAL RULES FOR MULTI-INTENT MESSAGES:
+- If a message contains MULTIPLE distinct actions (e.g., "save X and remind me at Y"), return MULTIPLE intents in the "intents" array
+- For EACH intent, extract ONLY the relevant part of the message for that intent
+- DO NOT put the full message into each intent
+- Example: "save pretext in cool tool, and remind for a shower at 10:57am today"
+  * For capture intent: title="pretext in cool tool", body=null (NOT the reminder part)
+  * For set_reminder intent: title="shower", datetime=TODAY (NOT the capture part)
+
+GENERAL RULES:
 - Greetings and small talk are "converse"
 - General knowledge questions (weather, cooking, math, etc.) are "converse" 
 - Only use "recall" for questions about things the user previously saved
 - "How is the weather?" = converse, "What did I save about react?" = recall
 - Use "capture" for statements or fragments meant to be saved (ideas, links, etc.)
-- If a message contains MULTIPLE distinct actions (e.g., "save X and remind me at Y"), return MULTIPLE intents in the "intents" array
-- For each intent, extract its specific entities
 - For recall, set "query" to the user's information need
 - For add_list_item, extract both the item (as title) and list name
 - For datetime, use YYYY-MM-DD format only (no time), or leave null if no date given
@@ -35,9 +41,9 @@ RESPONSE SCHEMA:
     {
       "intent": "<one of the intents above>",
       "entities": {
-        "title": "<item name for list_item, task name for task, or event name for events>",
-        "body": "<full content or null>",
-        "datetime": "<YYYY-MM-DD only, no time component or null>",
+        "title": "<extracted title for THIS intent only - not the full message>",
+        "body": "<extracted body for THIS intent only, or null>",
+        "datetime": "<YYYY-MM-DD only, or null>",
         "list_name": "<list name or null>"
       },
       "query": "<recall query or null, only for recall>"

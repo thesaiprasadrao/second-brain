@@ -223,10 +223,17 @@ async function processMultipleIntents(intentsArray, history, mergedText, origina
     let result = null;
 
     if (intent === 'capture') {
-      const cat = await categorize(entities?.body ?? entities?.title ?? mergedText, history);
-      const category = cat.options?.[0] ?? 'Inbox';
-      await saveCapture(category, cat.title, cat.body);
-      result = `Saved — ${category}: ${cat.title}`;
+      // For capture, use the extracted title and body from entities (already LLM-parsed)
+      const captureTitle = entities?.title?.trim();
+      const captureBody = entities?.body?.trim() || null;
+      
+      if (captureTitle) {
+        // Don't re-categorize if LLM already provided title/body
+        const cat = await categorize(captureTitle, history);
+        const category = cat.options?.[0] ?? 'Inbox';
+        await saveCapture(category, cat.title || captureTitle, cat.body || captureBody);
+        result = `Saved — ${category}: ${cat.title || captureTitle}`;
+      }
     } else if (intent === 'recall') {
       const recallQuery = query ?? mergedText;
       const recallContext = await buildRecallContext(recallQuery, 5);
