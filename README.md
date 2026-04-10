@@ -1,4 +1,5 @@
-# 🧠 Second Brain
+# 🧠 Second Brain 
+*Because the first one is for having ideas not storing them*
 
 Your personal AI second brain that captures ideas, tasks, and memories. **Self-hosted, end-to-end encrypted, zero data sharing.**
 
@@ -125,15 +126,6 @@ BRIEFING_TIME=08:00               # Daily briefing time
 
 ---
 
-## 📊 Dashboard Features
-
-- **Stats**: Total captures, today's count, message history
-- **Recent Captures**: Last 5 notes at a glance
-- **System Status**: Configuration and database health
-- **Export Data**: Download as JSON, CSV, or Markdown
-- **Settings**: Reconfigure or reset database
-
----
 
 ## 🛠 Deployment Options
 
@@ -148,7 +140,7 @@ BRIEFING_TIME=08:00               # Daily briefing time
 docker-compose up --build
 ```
 
-### Cloud VPS ($5/month)
+### Cloud VPS 
 - DigitalOcean, Linode, AWS, Hetzner, Vultr
 - SSH in, install Node.js, run `2nd-brain setup && 2nd-brain start`
 - Server keeps running with PM2
@@ -158,15 +150,6 @@ docker-compose up --build
 # SSH into Pi, then
 2nd-brain setup && 2nd-brain start
 ```
-
----
-
-## 🔐 Privacy & Security
-
-✅ **Zero Cloud** — Everything runs on your machine  
-✅ **Encrypted** — Telegram/WhatsApp are end-to-end encrypted by default  
-✅ **No Tracking** — No analytics, telemetry, or ads  
-✅ **You Own Your Data** — Export anytime as JSON, CSV, or Markdown
 
 ---
 
@@ -234,13 +217,6 @@ A: Yes! Export to Google Docs and share the link.
 **Q: Does it work offline?**  
 A: LLM processing needs internet. Messages queue when offline.
 
----
-
-## 📦 Requirements
-
-- Node.js 20+
-- Internet connection (for LLM and APIs)
-- Optional: Docker, Telegram account, Google account
 
 ---
 
