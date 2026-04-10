@@ -11,7 +11,7 @@ Your personal AI second brain that captures ideas, tasks, and memories. **Self-h
 - 📱 **Telegram/WhatsApp**: Use your preferred messaging app
 - 🏠 **Self-Hosted**: Run on your own machine, nothing leaves your device
 - 🔐 **Private**: No cloud, no tracking, no data sharing
-- 📊 **Dashboard**: Beautiful TUI to manage everything
+- 📊 **Dashboard**: Beautiful TUI to manage everything (coming soon)
 
 ---
 
